@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>PskOnline.X20.DotNet.WinUsb</id>
+    <version>0.8.0</version>
+    <authors>Alexey Adadurov</authors>
+    <owners>Alexey Adadurov</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://github.com/adadurov/PskOnline.X20.DotNet/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/adadurov/PskOnline.X20.DotNet</projectUrl>
+    <description>.Net Client Code for PskOnline X20 USB 2.0 PPG Waveform Sensor</description>
+    <releaseNotes>Notice: this is a prerelease version and is likely to change.</releaseNotes>
+    <copyright>Copyright (c) 2019 PskOnline.ru</copyright>
+    <repository type="git" url="https://github.com/adadurov/PskOnline.X20.DotNet.git" />
+    <dependencies>
+      <group targetFramework=".NETFramework4.7.2">
+        <dependency id="WinUSBNet" version="1.0.3" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src=".\src\PskOnline.X20.Protocol.WinUSB\bin\Release\PskOnline.X20.Protocol.WinUSB.dll" target="lib\net472\PskOnline.X20.Protocol.WinUSB.dll" />
+    <file src=".\src\PskOnline.X20.Protocol.WinUSB\bin\Release\PskOnline.X20.Protocol.dll" target="lib\net472\PskOnline.X20.Protocol.dll" />
+  </files>
+</package>

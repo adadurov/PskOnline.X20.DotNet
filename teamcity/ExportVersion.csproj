@@ -1,0 +1,47 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="15.0">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+
+  <Target Name="Clean">
+    <CallTarget Targets="Build" />
+  </Target>
+  <Target Name="Rebuild">
+    <CallTarget Targets="Build" />
+  </Target>
+  <Target Name="Build">
+    <Error Condition="'$(ProductVersion)' == ''" Text="&quot;ProductVersion&quot; property is not defined." />
+    <PropertyGroup>
+      <!-- TeamCity: prepare properties for version output-->
+      <ExportVersionMessage>##teamcity[setParameter name='version' value='$(ProductVersion)']</ExportVersionMessage>
+      <ExportBuildNumberMessage>##teamcity[buildNumber '$(FileVersion)']</ExportBuildNumberMessage>
+
+      <!-- Azure DevOps: prepare variables for version outputs-->
+      <ExportVersionMessageVTST>##vso[task.setvariable variable=ProductVersion;]$(ProductVersion)</ExportVersionMessageVTST>
+      <ExportBuildNumberMessageVTST>##vso[task.setvariable variable=FullBuildNumber;]$(FileVersion)</ExportBuildNumberMessageVTST>
+
+      <CommonAssemblyInfo>
+//
+// DO NOT MODIFY THIS FILE!!!
+//
+// This file is generated automatically by building the teamcity/ExportVersion.csproj project
+using System.Reflection%3B
+[assembly: AssemblyCompany("$(Company)")]
+[assembly: AssemblyProduct("$(Product)")]
+[assembly: AssemblyCopyright("$(Copyright)")]
+[assembly: AssemblyTrademark("")]
+[assembly: AssemblyVersion("$(AssemblyVersion)")]
+[assembly: AssemblyFileVersion("$(AssemblyFileVersion)")]
+      </CommonAssemblyInfo>
+
+    </PropertyGroup>
+    <!-- TeamCity: set version (x.y.z) and build number (x.y.z.build) from the command line-->
+    <Message Importance="High" Text="$(ExportVersionMessage)" />
+    <Message Importance="High" Text="$(ExportBuildNumberMessage)" />
+
+    <!-- Azure DevOps: set version (x.y.z) and build number (x.y.z.build) from the command line-->
+    <Message Importance="High" Text="$(ExportVersionMessageVTST)" />
+    <Message Importance="High" Text="$(ExportBuildNumberMessageVTST)" />
+
+    <WriteLinesToFile File="../VERSION" Overwrite="true" Lines="$(ProductVersion).$(BuildCounter)" />
+    <WriteLinesToFile File="../CommonAssemblyInfo.cs" Overwrite="true" Lines="$(CommonAssemblyInfo)" />
+  </Target>
+</Project>
