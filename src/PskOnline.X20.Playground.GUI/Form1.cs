@@ -21,6 +21,8 @@
     OxyPlot.Series.LineSeries _lineSeries;
     StdDevStabiizer _signalNormalizer;
 
+    LowPassFilter _lpFilter;
+
     IX20Device _device;
 
     double SamplingRate { get; set; } = 400.0;
@@ -38,6 +40,7 @@
         SamplingRate,
         new StdDevStabilizerParams { MinGain = 200, MaxGain = 13000, DSN = 3337 });
 
+      _lpFilter = new LowPassFilter();
       InitializeComponent();
     }
 
@@ -77,6 +80,53 @@
       _thread = new Thread(DataRetrievingThread);
       _thread.Start();
       timer1.Start();
+    }
+
+    private void UpdatePlotData()
+    {
+      // take all new packages from the queue
+      var packages = new List<PhysioDataPackage>(5);
+
+      PhysioDataPackage package;
+      while (_analysisQueue.TryDequeue(out package))
+      {
+        // Normalize samples using normalizer
+        _signalNormalizer.NormalizeDataInPlace(package.Samples);
+
+        _lpFilter.FilterInPlace(package.Samples);
+
+        packages.Add(package);
+      }
+
+      // find out which samples must be visible
+      UpdateVisibleSamples(packages);
+
+      var c = 0;
+      var points = new OxyPlot.DataPoint[_visibleSamples.Count];
+      foreach (var value in _visibleSamples)
+      {
+        points[c++] = new OxyPlot.DataPoint(c * 1.0 / SamplingRate, value);
+      }
+
+      _lineSeries.Points.Clear();
+      _lineSeries.Points.AddRange(points);
+      plotView1.InvalidatePlot(true);
+    }
+
+    /// <summary>
+    /// Put to _inWindowSamples only those samples that must be visible
+    /// </summary>
+    /// <param name="packages"></param>
+    private void UpdateVisibleSamples(List<PhysioDataPackage> packages)
+    {
+      var invertedNewSamples = packages.SelectMany(p => p.Samples).Select(p => -p);
+      var allSamples = _visibleSamples.Concat(invertedNewSamples).ToArray();
+
+      var screensToSkip = allSamples.Count() / MaxNumberOfSamplesOnScreen;
+      var samplesToSkip = screensToSkip * MaxNumberOfSamplesOnScreen;
+
+      _visibleSamples.Clear();
+      _visibleSamples.AddRange(allSamples.Skip(samplesToSkip));
     }
 
     private void DataRetrievingThread()
@@ -144,51 +194,6 @@
         {
         }
       }
-    }
-
-    private void UpdatePlotData()
-    {
-      // take all new packages from the queue
-      var packages = new List<PhysioDataPackage>(5);
-
-      PhysioDataPackage package;
-      while (_analysisQueue.TryDequeue(out package))
-      {
-        // Normalize samples using normalizer
-        _signalNormalizer.NormalizeDataInPlace(package.Samples);
-
-        packages.Add(package);
-      }
-
-      // find out which samples must be visible
-      UpdateVisibleSamples(packages);
-
-      var c = 0;
-      var points = new OxyPlot.DataPoint[_visibleSamples.Count];
-      foreach (var value in _visibleSamples)
-      {
-        points[c++] = new OxyPlot.DataPoint(c * 1.0 / SamplingRate, value);
-      }
-
-      _lineSeries.Points.Clear();
-      _lineSeries.Points.AddRange(points);
-      plotView1.InvalidatePlot(true);
-    }
-
-    /// <summary>
-    /// Put to _inWindowSamples only those samples that must be visible
-    /// </summary>
-    /// <param name="packages"></param>
-    private void UpdateVisibleSamples(List<PhysioDataPackage> packages)
-    {
-      var invertedNewSamples = packages.SelectMany(p => p.Samples).Select(p => -p);
-      var allSamples = _visibleSamples.Concat(invertedNewSamples).ToArray();
-
-      var screensToSkip = allSamples.Count() / MaxNumberOfSamplesOnScreen;
-      var samplesToSkip = screensToSkip * MaxNumberOfSamplesOnScreen;
-
-      _visibleSamples.Clear();
-      _visibleSamples.AddRange(allSamples.Skip(samplesToSkip));
     }
   }
 }
