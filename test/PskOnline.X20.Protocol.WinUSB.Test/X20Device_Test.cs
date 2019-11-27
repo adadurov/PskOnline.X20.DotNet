@@ -1,10 +1,9 @@
 ﻿namespace PskOnline.X20.Protocol.WinUSB.Test
 {
+  using System;
   using Microsoft.Extensions.Logging;
   using NUnit.Framework;
   using Shouldly;
-  using System;
-  using System.Collections.Generic;
 
   [TestFixture]
   public class X20Device_Test
@@ -111,10 +110,40 @@
       package.Samples.Length.ShouldBeGreaterThan(0);
     }
 
-    private TimeSpan ElapsedFrom(DateTime startTime)
+    [Test]
+    [Explicit]
+    public void OverflowFlag_Smoke()
     {
-      return DateTime.Now - startTime;
+      var startResponse = _device.StartMeasurement();
+      startResponse.ShouldBeTrue();
+
+      // the pause before overflow occurs
+      // depends on the size of the buffer in the firmware
+      System.Threading.Thread.Sleep(3000);
+
+      var package1 = _device.GetPhysioData();
+      var package2 = _device.GetPhysioData();
+
+      // checkpoint...
+      package1.ShouldNotBeNull();
+      package2.ShouldNotBeNull();
+
+      DumpPackageHeader(package1);
+      DumpPackageHeader(package2);
+
+      // checkpoints...
+      Assert.That(
+        package1.RingBufferOverflows > 0 ||
+        package2.RingBufferOverflows > 0);
     }
 
+    private void DumpPackageHeader(PhysioDataPackage package)
+    {
+      _logger.LogInformation($"=====>");
+      _logger.LogInformation($"Number:      {package.PackageNumber}");
+      _logger.LogInformation($"Samples:     {package.Samples.Length}");
+      _logger.LogInformation($"Ring buffer: {package.RingBufferDataCount}");
+      _logger.LogInformation($"Overflows:   {package.RingBufferOverflows}");
+    }
   }
 }
