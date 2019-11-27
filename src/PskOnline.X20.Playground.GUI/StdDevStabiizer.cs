@@ -52,15 +52,9 @@
     long Osum = 0;
 
     /// <summary>
-    /// History of the Standard Deviation values
-    /// </summary>
-    readonly long[] StdDev;
-
-    /// <summary>
     /// History of the Mean(_I) values
     /// </summary>
     readonly long[] IM;
-
 
     /// <summary>
     /// </summary>
@@ -77,7 +71,6 @@
       IM = new long[WindowSize];
       DD = new long[WindowSize];
 
-      StdDev = new long[WindowSize];
       O = new long[WindowSize];
     }
 
@@ -99,35 +92,38 @@
 
       var Aold = IN[_idx];                  // The oldest input
 
-      // update the sum of inputs over the analysis window
+      // update the sum of inputs over the history window
       INsum -= Aold;                         
       INsum += Ain;
-      IN[_idx] = Ain;                       // remember the sum of the inputs
+      IN[_idx] = Ain;
 
-      var MA = INsum / WindowSize;          // average of the inputs (sum(inputs) / number)
-      IM[_idx] = MA;                        // remember the current sum
+      // average of the inputs (sum(inputs) / number)
+      var MA = INsum / WindowSize;
+      // store the current average in the history window
+      IM[_idx] = MA;
 
-      var gain = 51.0 * Math.Sqrt(DDsum / WindowSize);  // gain -- proportional to StdDev
+      // gain -- proportional to StdDev
+      var gain = 51.0 * Math.Sqrt(DDsum / WindowSize);
 
-      StdDev[_idx] = (long)gain;            // store the StdDev value in the analysis window
-
-      var A2 = IN[IM2];                     // the input value at 1/2 of the window back
-      var DS1 = A2 - MA;                    // deviation of the current input from Mean(input)
-      DS1 *= DS1;                           // squared
+      // the input value at 1/2 of the window back
+      var A2 = IN[IM2];
+      // deviation of the current input from Mean(input)
+      var DS1 = A2 - MA;
+      // squared
+      DS1 *= DS1;
 
       // Update the sum of the squared deviations over the window
       DDsum -= DD[_idx];
       DDsum += DS1;
-      DD[_idx] = DS1;                       // remember the latest sum of the deivations
+      // store the latest sum of the deivations
+      DD[_idx] = DS1;
 
       // Prevent amplification of the noise
       gain = Math.Min(Math.Max(gain, GainMin), GainMax);
 
       // Produce the output value
       // Aold - the oldest value in the window
-      // МА2 - MA at 1/2 of the window earlier
-      // КА - gain
-      // DSN - target StdDev
+      // МА2 - Mean(A) at 1/2 of the window earlier
       var MA2 = IM[IM2];                  // 
       var output = TargetStdDev * (Aold - MA2) / gain;
 
@@ -149,7 +145,6 @@
           IN[i] = 0;
           IM[i] = 0;
           DD[i] = 0;
-          StdDev[i] = 0;
           O[i] = 0;
         }
         _historyEmpty = false;
