@@ -30,14 +30,11 @@
 
     IX20Device _device;
 
-    double globalCounter = 0;
-
     double SamplingRate { get; set; } = 400.0;
 
     int MaxNumberOfSamplesOnScreen => (int)(5 * SamplingRate);
 
     Thread _thread;
-
 
     public Form1()
     {
@@ -206,11 +203,28 @@
         catch (Exception ex)
         {
           Debug.WriteLine("Unable to read from device. " + ex.Message);
+          DisposeDeviceAndWaitForNewConnection();
         }
       }
     }
 
-    private IX20Device GetWinUsbPhysioPipeReader()
+    private void DisposeDeviceAndWaitForNewConnection()
+    {
+      try
+      {
+        _device?.Dispose();
+        _device = null;
+      }
+      catch
+      {
+      }
+      finally
+      {
+        _device = null;
+      }
+    }
+
+    private IX20Device GetConnectedDevice()
     {
       var devices = X20DeviceEnumerator.GetDevices(SerilogHelper.GetLoggerFactory());
 
@@ -219,26 +233,34 @@
         return null;
       }
 
-      var dev = devices.First().CreateDevice(SerilogHelper.GetLoggerFactory());
+      try
+      {
+        var dev = devices.First().CreateDevice(SerilogHelper.GetLoggerFactory());
 
-      // send 'get capabilities' command
-      var capabilities = dev.GetCapabilities();
-      SamplingRate = capabilities.SamplingRate;
+        // send 'get capabilities' command
+        var capabilities = dev.GetCapabilities();
+        SamplingRate = capabilities.SamplingRate;
 
-      dev.UsePpgWaveform();
-//      dev.UseRamp();
+        dev.UsePpgWaveform();
+        //      dev.UseRamp();
 
-      // send 'start' command
-      dev.StartMeasurement();
+        // send 'start' command
+        dev.StartMeasurement();
 
-      return dev;
+        return dev;
+      }
+      catch (Exception ex)
+      {
+        Debug.WriteLine("Warning: " + ex.Message);
+      }
+      return null;
     }
 
     private void timer1_Tick(object sender, EventArgs e)
     {
       if (_device == null)
       {
-        _device = GetWinUsbPhysioPipeReader();
+        _device = GetConnectedDevice();
       }
       if (_device != null)
       {
