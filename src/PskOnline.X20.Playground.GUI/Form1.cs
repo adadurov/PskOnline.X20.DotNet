@@ -18,12 +18,16 @@
     ConcurrentQueue<PhysioDataPackage> _analysisQueue;
     List<int> _visibleSamples;
 
-    OxyPlot.Series.LineSeries _lineSeries;
+    OxyPlot.Series.LineSeries _filteredSeries;
+    OxyPlot.Series.LineSeries _unfilteredSeries;
+
     StdDevStabiizer _signalNormalizer;
 
     LowPassFilter _lpFilter;
 
     IX20Device _device;
+
+    double globalCounter = 0;
 
     double SamplingRate { get; set; } = 400.0;
 
@@ -57,22 +61,50 @@
       {
         PlotType = OxyPlot.PlotType.XY
       };
-      _lineSeries = new OxyPlot.Series.LineSeries();
-      plotModel.Axes.Add(new OxyPlot.Axes.LinearAxis
+      var X = new OxyPlot.Axes.LinearAxis
       {
         Position = OxyPlot.Axes.AxisPosition.Bottom,
         Minimum = 0,
         Maximum = 5.0
-      });
+      };
 
-      plotModel.Axes.Add(new OxyPlot.Axes.LinearAxis
+      var Y_left = new OxyPlot.Axes.LinearAxis
       {
+        Key = "Filtered",
         Position = OxyPlot.Axes.AxisPosition.Left,
         Minimum = -600,
         Maximum = 600
-      });
+      };
 
-      plotModel.Series.Add(_lineSeries);
+      var Y_right = new OxyPlot.Axes.LinearAxis
+      {
+        Key = "Unfiltered",
+        Position = OxyPlot.Axes.AxisPosition.Right,
+        Minimum = -40000,
+        Maximum = -20000
+      };
+
+      plotModel.Axes.Add(X);
+      plotModel.Axes.Add(Y_left);
+      plotModel.Axes.Add(Y_right);
+
+      _filteredSeries = new OxyPlot.Series.LineSeries
+      {
+        XAxisKey = X.Key,
+        YAxisKey = Y_left.Key,
+        Color = OxyPlot.OxyColor.FromRgb(0, 0, 255)
+      };
+
+      _unfilteredSeries = new OxyPlot.Series.LineSeries
+      {
+        XAxisKey = X.Key,
+        YAxisKey = Y_right.Key,
+        Color = OxyPlot.OxyColor.FromRgb(255, 0, 0)
+      };
+
+
+      plotModel.Series.Add(_unfilteredSeries);
+      plotModel.Series.Add(_filteredSeries);
       plotView1.Model = plotModel;
 
       _analysisQueue = new ConcurrentQueue<PhysioDataPackage>();
@@ -90,26 +122,39 @@
       PhysioDataPackage package;
       while (_analysisQueue.TryDequeue(out package))
       {
-        // Normalize samples using normalizer
-        _signalNormalizer.NormalizeDataInPlace(package.Samples);
-
-        _lpFilter.FilterInPlace(package.Samples);
-
+        for (var i = 0; i < package.Samples.Length; ++i)
+        {
+          package.Samples[i] = 32767 - package.Samples[i];
+        }
         packages.Add(package);
       }
 
       // find out which samples must be visible
-      UpdateVisibleSamples(packages);
+      var visibleSamples = GetVisibleSamplesAndCache(packages).ToArray();
 
-      var c = 0;
-      var points = new OxyPlot.DataPoint[_visibleSamples.Count];
-      foreach (var value in _visibleSamples)
+      var unfilteredSamples = visibleSamples.ToArray();
+      var filteredSamples = visibleSamples.ToArray();
+      _signalNormalizer.NormalizeDataInPlace(filteredSamples);
+      _lpFilter.FilterInPlace(filteredSamples);
+
+      var filteredPoints = new OxyPlot.DataPoint[unfilteredSamples.Length];
+      var unfilteredPoints = new OxyPlot.DataPoint[unfilteredSamples.Length];
+      for (var c = 0; c < unfilteredSamples.Length; ++c)
       {
-        points[c++] = new OxyPlot.DataPoint(c * 1.0 / SamplingRate, value);
+        var time = c * 1.0 / SamplingRate;
+
+        var value = unfilteredSamples[c];
+        var filteredValue = filteredSamples[c];
+
+        unfilteredPoints[c] = new OxyPlot.DataPoint(time, value);
+        filteredPoints[c] =   new OxyPlot.DataPoint(time, filteredValue);
       }
 
-      _lineSeries.Points.Clear();
-      _lineSeries.Points.AddRange(points);
+      _unfilteredSeries.Points.Clear();
+      _unfilteredSeries.Points.AddRange(unfilteredPoints);
+      _filteredSeries.Points.Clear();
+      _filteredSeries.Points.AddRange(filteredPoints);
+
       plotView1.InvalidatePlot(true);
     }
 
@@ -117,16 +162,16 @@
     /// Put to _inWindowSamples only those samples that must be visible
     /// </summary>
     /// <param name="packages"></param>
-    private void UpdateVisibleSamples(List<PhysioDataPackage> packages)
+    private List<int> GetVisibleSamplesAndCache(List<PhysioDataPackage> packages)
     {
-      var invertedNewSamples = packages.SelectMany(p => p.Samples).Select(p => -p);
+      var invertedNewSamples = packages.SelectMany(p => p.Samples);
       var allSamples = _visibleSamples.Concat(invertedNewSamples).ToArray();
 
-      var screensToSkip = allSamples.Count() / MaxNumberOfSamplesOnScreen;
-      var samplesToSkip = screensToSkip * MaxNumberOfSamplesOnScreen;
+      var samplesToSkip = allSamples.Length - allSamples.Length % MaxNumberOfSamplesOnScreen;
 
       _visibleSamples.Clear();
       _visibleSamples.AddRange(allSamples.Skip(samplesToSkip));
+      return _visibleSamples;
     }
 
     private void DataRetrievingThread()
@@ -171,6 +216,7 @@
       SamplingRate = capabilities.SamplingRate;
 
       dev.UsePpgWaveform();
+//      dev.UseRamp();
 
       // send 'start' command
       dev.StartMeasurement();

@@ -72,12 +72,16 @@
       DD = new long[WindowSize];
 
       O = new long[WindowSize];
+      InitWindow();
+    }
+
+    public int Normalize(int data)
+    {
+      return NormalizeSingleValue(data);
     }
 
     public void NormalizeDataInPlace(int[] data)
     {
-      InitWindow(data);
-
       for (int i = 0; i < data.Length; ++i)
       {
         data[i] = NormalizeSingleValue(data[i]);
@@ -135,9 +139,9 @@
       return (int) (output - Osum / WindowSize);
     }
 
-    private void InitWindow(int[] data)
+    private void InitWindow()
     {
-      if( _historyEmpty && (data.Length > 0) )
+      if (_historyEmpty)
       {
         // reset history
         for (var i = 0; i < WindowSize; ++i)
