@@ -1,6 +1,7 @@
 ﻿namespace PskOnline.X20.Math
 {
   using System;
+  using System.Collections.Generic;
 
   public class StdDevStabiizer
   {
@@ -78,6 +79,14 @@
     public int Normalize(int data)
     {
       return NormalizeSingleValue(data);
+    }
+
+    public void NormalizeDataInPlace(List<int> data)
+    {
+      for (int i = 0; i < data.Count; ++i)
+      {
+        data[i] = NormalizeSingleValue(data[i]);
+      }
     }
 
     public void NormalizeDataInPlace(int[] data)

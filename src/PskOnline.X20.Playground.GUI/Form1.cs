@@ -16,7 +16,10 @@
     Microsoft.Extensions.Logging.ILogger _logger;
 
     ConcurrentQueue<PhysioDataPackage> _analysisQueue;
-    List<int> _visibleSamples;
+    List<int> _visibleFilteredSamples;
+    List<int> _visibleUnfilteredSamples;
+    List<int> _newUnfilteredSamplesBuffer;
+    List<int> _newFilteredSamplesBuffer;
 
     OxyPlot.Series.LineSeries _filteredSeries;
     OxyPlot.Series.LineSeries _unfilteredSeries;
@@ -39,7 +42,12 @@
     public Form1()
     {
       _logger = SerilogHelper.CreateLogger(nameof(Program));
-      _visibleSamples = new List<int>(2 * MaxNumberOfSamplesOnScreen);
+
+      _visibleUnfilteredSamples = new List<int>(2 * MaxNumberOfSamplesOnScreen);
+      _visibleFilteredSamples = new List<int>(2 * MaxNumberOfSamplesOnScreen);
+      _newUnfilteredSamplesBuffer = new List<int>(2 * MaxNumberOfSamplesOnScreen);
+      _newFilteredSamplesBuffer = new List<int>(2 * MaxNumberOfSamplesOnScreen);
+
       _signalNormalizer = new StdDevStabiizer(
         SamplingRate,
         new StdDevStabilizerParams { MinGain = 200, MaxGain = 13000, DSN = 3337 });
@@ -117,8 +125,8 @@
     private void UpdatePlotData()
     {
       // take all new packages from the queue
-      var packages = new List<PhysioDataPackage>(5);
-
+      _newUnfilteredSamplesBuffer.Clear();
+      _newFilteredSamplesBuffer.Clear();
       PhysioDataPackage package;
       while (_analysisQueue.TryDequeue(out package))
       {
@@ -126,25 +134,28 @@
         {
           package.Samples[i] = 32767 - package.Samples[i];
         }
-        packages.Add(package);
+        _newUnfilteredSamplesBuffer.AddRange(package.Samples);
+        _newFilteredSamplesBuffer.AddRange(package.Samples);
       }
 
+      _signalNormalizer.NormalizeDataInPlace(_newFilteredSamplesBuffer);
+      _lpFilter.FilterInPlace(_newFilteredSamplesBuffer);
+
       // find out which samples must be visible
-      var visibleSamples = GetVisibleSamplesAndCache(packages).ToArray();
+      var visibleUnfilteredSamples = GetVisibleSamplesAndCache(_newUnfilteredSamplesBuffer, _visibleUnfilteredSamples);
 
-      var unfilteredSamples = visibleSamples.ToArray();
-      var filteredSamples = visibleSamples.ToArray();
-      _signalNormalizer.NormalizeDataInPlace(filteredSamples);
-      _lpFilter.FilterInPlace(filteredSamples);
+      var visibleFilteredSamples = GetVisibleSamplesAndCache(_newFilteredSamplesBuffer, _visibleFilteredSamples);
 
-      var filteredPoints = new OxyPlot.DataPoint[unfilteredSamples.Length];
-      var unfilteredPoints = new OxyPlot.DataPoint[unfilteredSamples.Length];
-      for (var c = 0; c < unfilteredSamples.Length; ++c)
+      var count = visibleUnfilteredSamples.Count;
+
+      var filteredPoints = new OxyPlot.DataPoint[count];
+      var unfilteredPoints = new OxyPlot.DataPoint[count];
+      for (var c = 0; c < count; ++c)
       {
         var time = c * 1.0 / SamplingRate;
 
-        var value = unfilteredSamples[c];
-        var filteredValue = filteredSamples[c];
+        var value = visibleUnfilteredSamples[c];
+        var filteredValue = visibleFilteredSamples[c];
 
         unfilteredPoints[c] = new OxyPlot.DataPoint(time, value);
         filteredPoints[c] =   new OxyPlot.DataPoint(time, filteredValue);
@@ -162,16 +173,15 @@
     /// Put to _inWindowSamples only those samples that must be visible
     /// </summary>
     /// <param name="packages"></param>
-    private List<int> GetVisibleSamplesAndCache(List<PhysioDataPackage> packages)
+    private List<int> GetVisibleSamplesAndCache(List<int> newSamples, List<int> buffer)
     {
-      var invertedNewSamples = packages.SelectMany(p => p.Samples);
-      var allSamples = _visibleSamples.Concat(invertedNewSamples).ToArray();
+      var allSamples = buffer.Concat(newSamples).ToArray();
 
       var samplesToSkip = allSamples.Length - allSamples.Length % MaxNumberOfSamplesOnScreen;
 
-      _visibleSamples.Clear();
-      _visibleSamples.AddRange(allSamples.Skip(samplesToSkip));
-      return _visibleSamples;
+      buffer.Clear();
+      buffer.AddRange(allSamples.Skip(samplesToSkip));
+      return buffer;
     }
 
     private void DataRetrievingThread()

@@ -1,8 +1,7 @@
-﻿using System;
-using System.Linq;
-
-namespace PskOnline.X20.Playground.GUI
+﻿namespace PskOnline.X20.Playground.GUI
 {
+  using System.Collections.Generic;
+  using System.Linq;
 
   class LowPassFilter
   {
@@ -19,12 +18,21 @@ namespace PskOnline.X20.Playground.GUI
       }
     }
 
+    public void FilterInPlace(List<int> data)
+    {
+      var input = data.Select(p => (double)p).ToArray();
+      var output = _filter.ProcessSamples(input);
+
+      for (int i = 0; i < data.Count; ++i)
+      {
+        data[i] = (int)output[i];
+      }
+    }
+
     internal double Filter(int value)
     {
       return _filter.ProcessSample(value);
     }
-
-
 
     /*
 
