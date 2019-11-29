@@ -8,9 +8,9 @@
 
   public sealed class X20Device : IX20Device
   {
+    private readonly X20DeviceImplementation _deviceImpl;
     private readonly USBDevice _winUsbDevice;
     private readonly ILogger _logger;
-    private readonly Capabilities _capabilities;
 
     public X20Device(USBDeviceInfo winUsbDevice, ILoggerFactory loggerFactory)
     {
@@ -20,22 +20,8 @@
       if (winUsbDevice == null) throw new ArgumentNullException(nameof(winUsbDevice));
       _winUsbDevice = new USBDevice(winUsbDevice);
 
-      _capabilities = RetrieveCapabilities();
-
-      LogDeviceInformation(_logger, _capabilities);
-    }
-
-    private static void LogDeviceInformation(ILogger logger, Capabilities cap)
-    {
-      var sb = new StringBuilder("PSK-X20: ", 300);
-
-      sb.Append($" S/N: {cap.SerialNumber} //");
-      sb.Append($" Generation: {cap.Generation} //");
-      sb.Append($" FW Revision: {cap.RevisionInfo} //");
-      sb.Append($" FW Date: {cap.FirmwareBuildDate} //");
-      sb.Append($" Sampling rate: {cap.SamplingRate} //");
-
-      logger.LogInformation(sb.ToString());
+      _deviceImpl = new X20DeviceImplementation(
+        _logger, GetDataPipe(), GetUsbControlPipe(), _winUsbDevice.Descriptor.SerialNumber);
     }
 
     public IUsbDataPipe GetDataPipe()
@@ -51,93 +37,37 @@
     public void Dispose()
     {
       _winUsbDevice?.Dispose();
+      _deviceImpl?.Dispose();
     }
 
     public Capabilities GetCapabilities()
     {
-      return _capabilities;
-    }
-
-    private Capabilities RetrieveCapabilities()
-    {
-      var getCapDesc = new CmdGetCapabilitiesDescriptor(_logger);
-
-      var getCapDescResponse = (CmdGetCapabilitiesDescriptorResponse)getCapDesc.Execute(GetUsbControlPipe());
-      if (!getCapDescResponse.Succeeded)
-      {
-        return null;
-      }
-
-      var capDesc = getCapDescResponse.CapabilitiesDescriptor;
-
-      var fwBuildDate = GetStringDescriptor(capDesc.firmwareBuildDateStringDescriptorIndex);
-      var fwVersionInfo = GetStringDescriptor(capDesc.revisionInfoStringDescriptorIndex);
-
-      return new Capabilities
-      {
-        Size = capDesc.size,
-        SerialNumber = _winUsbDevice.Descriptor.SerialNumber,
-        Generation = capDesc.generation,
-        BitsPerSample = capDesc.bitsPerSample,
-        BytesPerPhysioTransfer = capDesc.bytesPerPhysioTransfer,
-        FirmwareBuildDate = fwBuildDate,
-        RevisionInfo = fwVersionInfo,
-        SamplingRate = capDesc.samplingRate
-      };
-    }
-
-    private string GetStringDescriptor(ushort stringDescriptorIndex)
-    {
-      var packet = new UsbStdSetupPacket
-      {
-        bmRequestType = 0x80,
-        bRequest = 6, // GET_DESCRIPTOR
-        wValue = (ushort)((3 << 8) + stringDescriptorIndex), // 3 => STRING
-        wIndex = 0x0409,
-        wLength = 256
-      };
-
-      var buffer = _winUsbDevice.ControlIn(packet.bmRequestType, packet.bRequest, packet.wValue, packet.wIndex, packet.wLength);
-
-      // this is required due to an issue in WinUSB.NET
-      var realLength = Math.Max(Math.Min(buffer[0], buffer.Length) - 2, 0);
-
-      return Encoding.Unicode.GetString(buffer, 2, realLength);
+      return _deviceImpl.GetCapabilities();
     }
 
     public bool StartMeasurement()
     {
-      var result = new CmdStart(_logger).Execute(GetUsbControlPipe());
-      return result.Succeeded;
+      return _deviceImpl.StartMeasurement();
     }
 
     public bool StopMeasurement()
     {
-      var result = new CmdStop(_logger).Execute(GetUsbControlPipe());
-      return result.Succeeded;
-    }
-
-    public bool UseRamp()
-    {
-      var result = new CmdUseRamp(_logger).Execute(GetUsbControlPipe());
-      return result.Succeeded;
+      return _deviceImpl.StopMeasurement();
     }
 
     public bool UsePpgWaveform()
     {
-      var result = new CmdUsePpgWaveform(_logger).Execute(GetUsbControlPipe());
-      return result.Succeeded;
+      return _deviceImpl.UsePpgWaveform();
+    }
+
+    public bool UseRamp()
+    {
+      return _deviceImpl.UseRamp();
     }
 
     public PhysioDataPackage GetPhysioData()
     {
-      var buffer = new byte[512];
-      var count = GetDataPipe().Read(buffer);
-      if (count > X20Constants.PhysioPackageHeaderSize)
-      {
-        return buffer.UsbDataPackageFromByteArray();
-      }
-      return null;
+      return _deviceImpl.GetPhysioData();
     }
   }
 }

@@ -77,6 +77,10 @@
         var response = _device.GetCapabilities();
         response.ShouldNotBeNull();
 
+        response.FirmwareBuildDate.Length.ShouldBeGreaterThan(5);
+        response.RevisionInfo.Length.ShouldBeGreaterThan(2);
+        response.SerialNumber.Length.ShouldBeGreaterThan(5);
+
         _logger.LogInformation($"Capabilities retrieved {count} times.");
       }
     }
