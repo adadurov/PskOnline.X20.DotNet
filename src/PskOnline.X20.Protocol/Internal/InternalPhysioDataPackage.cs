@@ -15,7 +15,10 @@
     public UInt32 flags;
 
     [FieldOffset(8)]
-    public UInt32 reserved;
+    public UInt16 die_temperature;
+
+    [FieldOffset(10)]
+    public UInt16 reserved;
 
     [FieldOffset(12)]
     public UInt32 ring_buffer_overflows;

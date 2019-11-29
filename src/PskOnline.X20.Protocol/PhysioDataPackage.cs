@@ -8,7 +8,9 @@
 
     public UInt32 Flags { get; set; }
 
-    public UInt32 Reserved { get; set; }
+    public float DieTemperature { get; set; }
+
+    public UInt16 Reserved { get; set; }
 
     public UInt32 RingBufferOverflows { get; set; }
 

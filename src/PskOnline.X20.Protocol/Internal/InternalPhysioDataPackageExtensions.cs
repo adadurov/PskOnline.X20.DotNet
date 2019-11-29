@@ -21,9 +21,13 @@
           samples[i] = BitConverter.ToInt32(bytes, start + i * sizeof(int));
         }
 
+        float dieTemperature = s.die_temperature >> 8;
+        dieTemperature += 0.0625f * (s.die_temperature & 0x0f);
+
         return new PhysioDataPackage
         {
           PackageNumber = s.package_number,
+          DieTemperature = dieTemperature,
           Flags = s.flags,
           Reserved = s.reserved,
           RingBufferOverflows = s.ring_buffer_overflows,

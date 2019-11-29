@@ -52,6 +52,7 @@
         {
           var usbPackage = pipeReader();
           Console.WriteLine(usbPackage.PackageNumber);
+          Console.WriteLine("T = " + usbPackage.DieTemperature);
           Console.WriteLine(usbPackage.Samples.Length);
           Console.WriteLine(usbPackage.RingBufferDataCount);
           Console.WriteLine(usbPackage.RingBufferOverflows);
