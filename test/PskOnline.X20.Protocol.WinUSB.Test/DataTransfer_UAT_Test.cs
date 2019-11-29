@@ -2,12 +2,9 @@
 {
   using Microsoft.Extensions.Logging;
   using NUnit.Framework;
-  using PskOnline.X20.Protocol.Internal;
   using Shouldly;
   using System;
   using System.Collections.Generic;
-  using System.Linq;
-  using System.Threading.Tasks;
 
   [TestFixture]
   public class DataTransfer_UAT_Test
@@ -60,11 +57,9 @@
         var startTime = DateTime.Now;
         var t = new System.Threading.Thread(() =>
         {
-          var dataPipe = device.GetDataPipe();
           while (true)
           {
-            int count = dataPipe.Read(buffer);
-            var package = buffer.UsbDataPackageFromByteArray();
+            var package = device.GetPhysioData();
             dataPackages.Add(package);
             samplesCount += package.Samples.Length;
           }

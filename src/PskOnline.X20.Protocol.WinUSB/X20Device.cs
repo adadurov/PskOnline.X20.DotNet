@@ -4,7 +4,6 @@
   using Microsoft.Extensions.Logging;
   using PskOnline.X20.Protocol.Internal;
   using System;
-  using System.Text;
 
   public sealed class X20Device : IX20Device
   {
@@ -37,7 +36,6 @@
     public void Dispose()
     {
       _winUsbDevice?.Dispose();
-      _deviceImpl?.Dispose();
     }
 
     public Capabilities GetCapabilities()

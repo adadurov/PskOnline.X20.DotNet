@@ -3,10 +3,7 @@
   using Microsoft.Extensions.Logging;
   using NUnit.Framework;
   using PskOnline.X20.Protocol.Internal;
-  using PskOnline.X20.Protocol.WinUSB;
   using Shouldly;
-  using System;
-  using System.Linq;
 
   [TestFixture]
   public class CmdGetCapabilitiesDescriptor_Test

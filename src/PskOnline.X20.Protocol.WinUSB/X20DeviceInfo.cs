@@ -3,7 +3,7 @@
   using MadWizard.WinUSBNet;
   using Microsoft.Extensions.Logging;
 
-  internal class X20DeviceInfo : IX20DeviceInfo
+  public class X20DeviceInfo : IX20DeviceInfo
   {
     private readonly USBDeviceInfo _d;
     private readonly string _serialNumber;

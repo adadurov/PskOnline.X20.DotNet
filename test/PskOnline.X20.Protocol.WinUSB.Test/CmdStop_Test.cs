@@ -4,8 +4,6 @@
   using NUnit.Framework;
   using PskOnline.X20.Protocol.Internal;
   using Shouldly;
-  using System;
-  using System.Linq;
 
   [TestFixture]
   public class CmdStop_Test

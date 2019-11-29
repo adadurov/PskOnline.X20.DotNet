@@ -13,13 +13,13 @@
     {
       var guid = Guid.Parse("{CC745879-91C7-4E8B-8F66-0FA69748909B}");
 
-      Func<byte[], int> readPipeWinUsb = GetWinUsbPhysioPipeReader(guid);
+      Func<PhysioDataPackage> readPipeWinUsb = GetWinUsbPhysioPipeReader(guid);
 
       DumpUsbPackages(readPipeWinUsb);
     }
 
 
-    private static Func<byte[], int> GetWinUsbPhysioPipeReader(Guid guid)
+    private static Func<PhysioDataPackage> GetWinUsbPhysioPipeReader(Guid guid)
     {
       var logger = SerilogHelper.CreateLogger(nameof(Program));
       var devices = X20DeviceEnumerator.GetDevices(SerilogHelper.GetLoggerFactory());
@@ -35,35 +35,22 @@
         while (devices.Count() == 0);
       }
       var dev = devices.First().CreateDevice(SerilogHelper.GetLoggerFactory());
-      var controlPipe = dev.GetUsbControlPipe();
 
-      // send 'get capabilities' command
-      var cd = (CmdGetCapabilitiesDescriptorResponse)
-                  new CmdGetCapabilitiesDescriptor(logger).Execute(controlPipe);
-
-      // send 'start' command
-      new CmdStart(logger).Execute(controlPipe);
-
-      var thePipe = dev.GetDataPipe();
+      dev.UsePpgWaveform();
+      dev.StartMeasurement();
 
       // read pipe function for WinUSB device
-      Func<byte[], int> readPipe = b => thePipe.Read(b);
-      return readPipe;
+      Func<PhysioDataPackage> readData = () => dev.GetPhysioData();
+      return readData;
     }
 
-    private static void DumpUsbPackages(Func<byte[], int> pipeReader)
+    private static void DumpUsbPackages(Func<PhysioDataPackage> pipeReader)
     {
-      var buffer = new byte[512];
-
       while (true)
       {
-        for (int i = 0; i < buffer.Length; ++i) buffer[i] = 0;
         try
         {
-          var numRead = pipeReader(buffer);
-
-          var usbPackage = buffer.UsbDataPackageFromByteArray();
-          Console.WriteLine($"=====> {numRead}");
+          var usbPackage = pipeReader();
           Console.WriteLine(usbPackage.PackageNumber);
           Console.WriteLine(usbPackage.Samples.Length);
           Console.WriteLine(usbPackage.RingBufferDataCount);

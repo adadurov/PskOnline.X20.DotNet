@@ -9,7 +9,7 @@
   {
     private static readonly Guid InterfaceGuid = Guid.Parse("{CC745879-91C7-4E8B-8F66-0FA69748909B}");
 
-    public static IEnumerable<IX20DeviceInfo> GetDevices(ILoggerFactory loggerFactory)
+    public static IEnumerable<X20DeviceInfo> GetDevices(ILoggerFactory loggerFactory)
     {
       if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
 

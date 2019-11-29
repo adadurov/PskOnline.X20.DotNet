@@ -4,8 +4,6 @@
   using NUnit.Framework;
   using PskOnline.X20.Protocol.Internal;
   using Shouldly;
-  using System;
-  using System.Linq;
 
   [TestFixture]
   public class CmdStart_Test
@@ -45,8 +43,8 @@
       while (count < 1000)
       {
         count++;
-        var response = new CmdStart(_logger).Execute(_device.GetUsbControlPipe());
-        response.Succeeded.ShouldBe(true);
+        var response = _device.StartMeasurement();
+        response.ShouldBe(true);
 
         _logger.LogInformation($"START executed {count} times.");
       }

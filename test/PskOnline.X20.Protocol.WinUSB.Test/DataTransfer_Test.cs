@@ -6,8 +6,6 @@
   using Shouldly;
   using System;
   using System.Collections.Generic;
-  using System.Linq;
-  using System.Threading.Tasks;
 
   [TestFixture]
   public class DataTransfer_Test
@@ -60,11 +58,9 @@
       var startTime = DateTime.Now;
       var t = new System.Threading.Thread(() =>
       {
-        var dataPipe = _device.GetDataPipe();
         while (true)
         {
-          int count = dataPipe.Read(buffer);
-          var package = buffer.UsbDataPackageFromByteArray();
+          var package = _device.GetPhysioData();
           dataPackages.Add(package);
           samplesCount += package.Samples.Length;
 
@@ -162,11 +158,9 @@
       var startTime = DateTime.Now;
       var t = new System.Threading.Thread(() =>
       {
-        var dataPipe = _device.GetDataPipe();
         while (true)
         {
-          int count = dataPipe.Read(buffer);
-          var package = buffer.UsbDataPackageFromByteArray();
+          var package = _device.GetPhysioData();
           dataPackages.Add(package);
           samplesCount += package.Samples.Length;
 

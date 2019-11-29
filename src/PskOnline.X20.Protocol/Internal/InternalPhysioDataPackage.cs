@@ -3,6 +3,8 @@
   using System;
   using System.Runtime.InteropServices;
 
+#pragma warning disable CA1812 // Class is never instantiated
+
   [StructLayout(LayoutKind.Explicit)]
   internal class InternalPhysioDataPackage
   {
@@ -24,4 +26,7 @@
     [FieldOffset(18)]
     public UInt16 num_samples;
   }
+
+#pragma warning restore CA1812 // Class is never instantiated
+
 }

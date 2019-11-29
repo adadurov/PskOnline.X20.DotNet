@@ -2,6 +2,8 @@
 {
   using System.Runtime.InteropServices;
 
+#pragma warning disable CA1051 // Do not declare visible instance fields
+
   [StructLayout(LayoutKind.Sequential, Pack = 2)]
   public class InternalCapabilitiesDescriptor
   {
@@ -42,5 +44,7 @@
     /// </summary>
     public ushort revisionInfoStringDescriptorIndex;
   }
+
+#pragma warning restore CA1051 // Do not declare visible instance fields
 
 }

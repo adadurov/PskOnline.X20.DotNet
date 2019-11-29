@@ -4,7 +4,7 @@
   using System;
   using System.Text;
 
-  public sealed class X20DeviceImplementation : IX20Device
+  public sealed class X20DeviceImplementation
   {
     private readonly ILogger _logger;
     private readonly IUsbDataPipe _usbDataPipe;
@@ -82,10 +82,6 @@
       sb.Append($" Sampling rate: {cap.SamplingRate} //");
 
       logger.LogInformation(sb.ToString());
-    }
-
-    public void Dispose()
-    {
     }
 
     public Capabilities GetCapabilities()
