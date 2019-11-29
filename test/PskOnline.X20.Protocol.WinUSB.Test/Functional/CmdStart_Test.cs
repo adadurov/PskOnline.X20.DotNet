@@ -1,4 +1,4 @@
-﻿namespace PskOnline.X20.Protocol.WinUSB.Test
+﻿namespace PskOnline.X20.Protocol.WinUSB.Test.Functional
 {
   using Microsoft.Extensions.Logging;
   using NUnit.Framework;
@@ -6,7 +6,7 @@
   using Shouldly;
 
   [TestFixture]
-  public class CmdStop_Test
+  public class CmdStart_Test
   {
     private ILogger _logger;
     private IX20Device _device;
@@ -14,7 +14,7 @@
     [SetUp]
     public void Setup()
     {
-      _logger = SerilogHelper.CreateLogger(nameof(CmdStop_Test));
+      _logger = SerilogHelper.CreateLogger(nameof(CmdStart_Test));
 
       var fac = SerilogHelper.GetLoggerFactory();
       _device = DeviceHelper.GetFirstSuitableDevice(fac);
@@ -28,25 +28,25 @@
 
     [Test]
     [Explicit]
-    public void Stop_Smoke()
+    public void Start_Smoke()
     {
-      var response = new CmdStop(_logger).Execute(_device.GetUsbControlPipe());
+      var response = new CmdStart(_logger).Execute(_device.GetUsbControlPipe());
       response.Succeeded.ShouldBe(true);
     }
 
     [Test]
     [Explicit]
-    public void Stop_Long()
+    public void Start_Long()
     {
       int count = 0;
 
       while (count < 1000)
       {
         count++;
-        var response = new CmdStop(_logger).Execute(_device.GetUsbControlPipe());
-        response.Succeeded.ShouldBe(true);
+        var response = _device.StartMeasurement();
+        response.ShouldBe(true);
 
-        _logger.LogInformation($"STOP executed {count} times.");
+        _logger.LogInformation($"START executed {count} times.");
       }
     }
 

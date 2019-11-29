@@ -1,4 +1,4 @@
-﻿namespace PskOnline.X20.Protocol.WinUSB.Test
+﻿namespace PskOnline.X20.Protocol.WinUSB.Test.Functional
 {
   using Microsoft.Extensions.Logging;
   using NUnit.Framework;
@@ -14,7 +14,7 @@
     [SetUp]
     public void Setup()
     {
-      _logger = SerilogHelper.CreateLogger(nameof(CmdStop_Test));
+      _logger = SerilogHelper.CreateLogger(nameof(CmdUseRamp_Test));
 
       var fac = SerilogHelper.GetLoggerFactory();
       _device = DeviceHelper.GetFirstSuitableDevice(fac);

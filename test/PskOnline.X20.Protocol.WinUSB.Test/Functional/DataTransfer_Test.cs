@@ -1,4 +1,4 @@
-﻿namespace PskOnline.X20.Protocol.WinUSB.Test
+﻿namespace PskOnline.X20.Protocol.WinUSB.Test.Functional
 {
   using Microsoft.Extensions.Logging;
   using NUnit.Framework;

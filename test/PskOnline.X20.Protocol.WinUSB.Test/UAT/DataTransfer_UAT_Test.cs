@@ -1,4 +1,4 @@
-﻿namespace PskOnline.X20.Protocol.WinUSB.Test
+﻿namespace PskOnline.X20.Protocol.WinUSB.Test.UAT
 {
   using Microsoft.Extensions.Logging;
   using NUnit.Framework;
@@ -16,7 +16,7 @@
     [SetUp]
     public void Setup()
     {
-      _logger = SerilogHelper.CreateLogger(nameof(DataTransfer_Test));
+      _logger = SerilogHelper.CreateLogger(nameof(DataTransfer_UAT_Test));
       
     }
 
