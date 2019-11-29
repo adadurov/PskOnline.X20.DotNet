@@ -4,11 +4,13 @@
   using Microsoft.Extensions.Logging;
   using PskOnline.X20.Protocol.Internal;
   using System;
+  using System.Text;
 
   public sealed class X20Device : IX20Device
   {
     private readonly USBDevice _winUsbDevice;
     private readonly ILogger _logger;
+    private readonly Capabilities _capabilities;
 
     public X20Device(USBDeviceInfo winUsbDevice, ILoggerFactory loggerFactory)
     {
@@ -17,6 +19,23 @@
 
       if (winUsbDevice == null) throw new ArgumentNullException(nameof(winUsbDevice));
       _winUsbDevice = new USBDevice(winUsbDevice);
+
+      _capabilities = RetrieveCapabilities();
+
+      LogDeviceInformation(_logger, _capabilities);
+    }
+
+    private static void LogDeviceInformation(ILogger logger, Capabilities cap)
+    {
+      var sb = new StringBuilder("PSK-X20: ", 300);
+
+      sb.Append($" S/N: {cap.SerialNumber} //");
+      sb.Append($" Generation: {cap.Generation} //");
+      sb.Append($" FW Revision: {cap.RevisionInfo} //");
+      sb.Append($" FW Date: {cap.FirmwareBuildDate} //");
+      sb.Append($" Sampling rate: {cap.SamplingRate} //");
+
+      logger.LogInformation(sb.ToString());
     }
 
     public IUsbDataPipe GetDataPipe()
@@ -36,6 +55,11 @@
 
     public Capabilities GetCapabilities()
     {
+      return _capabilities;
+    }
+
+    private Capabilities RetrieveCapabilities()
+    {
       var getCapDesc = new CmdGetCapabilitiesDescriptor(_logger);
 
       var getCapDescResponse = (CmdGetCapabilitiesDescriptorResponse)getCapDesc.Execute(GetUsbControlPipe());
@@ -52,6 +76,7 @@
       return new Capabilities
       {
         Size = capDesc.size,
+        SerialNumber = _winUsbDevice.Descriptor.SerialNumber,
         Generation = capDesc.generation,
         BitsPerSample = capDesc.bitsPerSample,
         BytesPerPhysioTransfer = capDesc.bytesPerPhysioTransfer,
@@ -74,9 +99,10 @@
 
       var buffer = _winUsbDevice.ControlIn(packet.bmRequestType, packet.bRequest, packet.wValue, packet.wIndex, packet.wLength);
 
-      var realLength = Math.Min(buffer[1], buffer.Length - 2);
+      // this is required due to an issue in WinUSB.NET
+      var realLength = Math.Max(Math.Min(buffer[0], buffer.Length) - 2, 0);
 
-      return System.Text.Encoding.Unicode.GetString(buffer, 2, realLength);
+      return Encoding.Unicode.GetString(buffer, 2, realLength);
     }
 
     public bool StartMeasurement()

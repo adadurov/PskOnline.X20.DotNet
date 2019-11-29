@@ -40,6 +40,11 @@
     /// For example: '1.2.3.0-alpha-29ab2fd9'
     /// </summary>
     public string RevisionInfo { get; set; }
+
+    /// <summary>
+    /// An arbitrary string containing a unique identifier of the device
+    /// </summary>
+    public string SerialNumber { get; set; }
   }
 
 }
