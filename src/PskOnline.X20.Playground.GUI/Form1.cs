@@ -13,8 +13,6 @@
 
   public partial class Form1 : Form
   {
-    Microsoft.Extensions.Logging.ILogger _logger;
-
     ConcurrentQueue<PhysioDataPackage> _analysisQueue;
     List<int> _visibleFilteredSamples;
     List<int> _visibleUnfilteredSamples;
@@ -23,6 +21,9 @@
 
     OxyPlot.Series.LineSeries _filteredSeries;
     OxyPlot.Series.LineSeries _unfilteredSeries;
+
+    OxyPlot.Axes.Axis _filteredAxis;
+    OxyPlot.Axes.Axis _unfilteredAxis;
 
     StdDevStabiizer _signalNormalizer;
 
@@ -38,8 +39,6 @@
 
     public Form1()
     {
-      _logger = SerilogHelper.CreateLogger(nameof(Program));
-
       _visibleUnfilteredSamples = new List<int>(2 * MaxNumberOfSamplesOnScreen);
       _visibleFilteredSamples = new List<int>(2 * MaxNumberOfSamplesOnScreen);
       _newUnfilteredSamplesBuffer = new List<int>(2 * MaxNumberOfSamplesOnScreen);
@@ -64,7 +63,7 @@
     {
       var plotModel = new OxyPlot.PlotModel
       {
-        PlotType = OxyPlot.PlotType.XY
+        PlotType = OxyPlot.PlotType.XY,
       };
       var X = new OxyPlot.Axes.LinearAxis
       {
@@ -73,7 +72,7 @@
         Maximum = 5.0
       };
 
-      var Y_left = new OxyPlot.Axes.LinearAxis
+      _filteredAxis = new OxyPlot.Axes.LinearAxis
       {
         Key = "Filtered",
         Position = OxyPlot.Axes.AxisPosition.Left,
@@ -81,7 +80,7 @@
         Maximum = 600
       };
 
-      var Y_right = new OxyPlot.Axes.LinearAxis
+      _unfilteredAxis = new OxyPlot.Axes.LinearAxis
       {
         Key = "Unfiltered",
         Position = OxyPlot.Axes.AxisPosition.Right,
@@ -90,20 +89,20 @@
       };
 
       plotModel.Axes.Add(X);
-      plotModel.Axes.Add(Y_left);
-      plotModel.Axes.Add(Y_right);
+      plotModel.Axes.Add(_filteredAxis);
+      plotModel.Axes.Add(_unfilteredAxis);
 
       _filteredSeries = new OxyPlot.Series.LineSeries
       {
         XAxisKey = X.Key,
-        YAxisKey = Y_left.Key,
+        YAxisKey = _filteredAxis.Key,
         Color = OxyPlot.OxyColor.FromRgb(0, 0, 255)
       };
 
       _unfilteredSeries = new OxyPlot.Series.LineSeries
       {
         XAxisKey = X.Key,
-        YAxisKey = Y_right.Key,
+        YAxisKey = _unfilteredAxis.Key,
         Color = OxyPlot.OxyColor.FromRgb(255, 0, 0)
       };
 
@@ -129,7 +128,7 @@
       {
         for (var i = 0; i < package.Samples.Length; ++i)
         {
-          package.Samples[i] = 32767 - package.Samples[i];
+          package.Samples[i] = (1 << 17) - package.Samples[i];
         }
         _newUnfilteredSamplesBuffer.AddRange(package.Samples);
         _newFilteredSamplesBuffer.AddRange(package.Samples);
@@ -221,7 +220,23 @@
       finally
       {
         _device = null;
+        ClearDeviceDetails();
       }
+    }
+
+    private void ClearDeviceDetails()
+    {
+      labelBuildDate.Text = "";
+      labelSerialNumber.Text = "";
+      labelRevision.Text = "";
+    }
+
+    private void DisplayDeviceDetails()
+    {
+      var caps = _device.GetCapabilities();
+      labelBuildDate.Text = caps.FirmwareBuildDate;
+      labelSerialNumber.Text = caps.SerialNumber;
+      labelRevision.Text = caps.RevisionInfo;
     }
 
     private IX20Device GetConnectedDevice()
@@ -261,6 +276,10 @@
       if (_device == null)
       {
         _device = GetConnectedDevice();
+        if (_device != null)
+        {
+          DisplayDeviceDetails();
+        }
       }
       if (_device != null)
       {
@@ -271,6 +290,39 @@
         catch
         {
         }
+      }
+    }
+
+    private void useRamp_CheckedChanged(object sender, EventArgs e)
+    {
+      if (useRamp.Checked)
+      {
+        _device?.UseRamp();
+      }
+      else
+      {
+        _device?.UsePpgWaveform();
+      }
+    }
+
+    private void findPlotsButton_Click(object sender, EventArgs e)
+    {
+      {
+        var minFiltered = _visibleFilteredSamples.Min();
+        var maxFiltered = _visibleFilteredSamples.Max();
+        var range = maxFiltered - minFiltered;
+        _filteredAxis.Zoom(
+          minFiltered - range,
+          maxFiltered + range);
+      }
+
+      {
+        var minUnfiltered = _visibleUnfilteredSamples.Min();
+        var maxUnfiltered = _visibleUnfilteredSamples.Max();
+        var range = maxUnfiltered - minUnfiltered;
+        _unfilteredAxis.Zoom(
+          minUnfiltered - range, 
+          maxUnfiltered + range);
       }
     }
   }
