@@ -13,6 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitignore = .gitignore
 		Common.props = Common.props
 		Directory.Build.props = Directory.Build.props
+		PskOnline.X20.Protocol.WinUSB.nuspec = PskOnline.X20.Protocol.WinUSB.nuspec
 		README.md = README.md
 		Versions.props = Versions.props
 	EndProjectSection
@@ -30,6 +31,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PskOnline.X20.Playground.GUI", "src\PskOnline.X20.Playground.GUI\PskOnline.X20.Playground.GUI.csproj", "{588395FE-842B-4DF5-8E31-F8D342751787}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PskOnline.X20.Playground.Console", "src\PskOnline.X20.Playground.Console\PskOnline.X20.Playground.Console.csproj", "{059486A2-354B-43B6-94B4-224DB7BE30EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PskOnline.X20.PulseDetector", "src\PskOnline.X20.PulseDetector\PskOnline.X20.PulseDetector.csproj", "{E153ADAA-BC0B-4B0E-ABED-45A76D8088CC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -87,6 +90,14 @@ Global
 		{059486A2-354B-43B6-94B4-224DB7BE30EE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{059486A2-354B-43B6-94B4-224DB7BE30EE}.Release|x86.ActiveCfg = Release|Any CPU
 		{059486A2-354B-43B6-94B4-224DB7BE30EE}.Release|x86.Build.0 = Release|Any CPU
+		{E153ADAA-BC0B-4B0E-ABED-45A76D8088CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E153ADAA-BC0B-4B0E-ABED-45A76D8088CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E153ADAA-BC0B-4B0E-ABED-45A76D8088CC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E153ADAA-BC0B-4B0E-ABED-45A76D8088CC}.Debug|x86.Build.0 = Debug|Any CPU
+		{E153ADAA-BC0B-4B0E-ABED-45A76D8088CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E153ADAA-BC0B-4B0E-ABED-45A76D8088CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E153ADAA-BC0B-4B0E-ABED-45A76D8088CC}.Release|x86.ActiveCfg = Release|Any CPU
+		{E153ADAA-BC0B-4B0E-ABED-45A76D8088CC}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

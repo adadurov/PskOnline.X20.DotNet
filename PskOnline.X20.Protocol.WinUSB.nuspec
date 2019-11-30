@@ -21,5 +21,6 @@
   <files>
     <file src=".\src\PskOnline.X20.Protocol.WinUSB\bin\Release\PskOnline.X20.Protocol.WinUSB.dll" target="lib\net472\PskOnline.X20.Protocol.WinUSB.dll" />
     <file src=".\src\PskOnline.X20.Protocol.WinUSB\bin\Release\PskOnline.X20.Protocol.dll" target="lib\net472\PskOnline.X20.Protocol.dll" />
+    <file src=".\src\PskOnline.X20.PulseDetector\bin\Release\PskOnline.X20.PulseDetector.dll" target="lib\net472\PskOnline.X20.PulseDetector.dll" />
   </files>
 </package>

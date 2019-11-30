@@ -1,10 +1,15 @@
-﻿namespace PskOnline.X20.Math
+﻿namespace PskOnline.X20.PulseDetector
 {
   using System;
   using System.Collections.Generic;
 
   public class StdDevStabiizer
   {
+    private double MinGain { get; set; } = 300;
+
+    private double MaxGain { get; set; } = 13000;
+
+
     /// <summary>
     /// Current index in the window
     /// </summary>
@@ -45,12 +50,12 @@
     /// <summary>
     /// History of the outputs
     /// </summary>
-    readonly long[] O;
+    readonly long[] Out;
 
     /// <summary>
     /// Sum of the outputs
     /// </summary>
-    long Osum = 0;
+    long OutSum = 0;
 
     /// <summary>
     /// History of the Mean(_I) values
@@ -60,11 +65,11 @@
     /// <summary>
     /// </summary>
     /// <param name="samplingRate"></param>
-    public StdDevStabiizer(double samplingRate, StdDevStabilizerParams para)
+    public StdDevStabiizer(double samplingRate, double targetStdDev, double minGain, double maxGain)
     {
-      TargetStdDev = para.DSN;
-      GainMin = para.MinGain;
-      GainMax = para.MaxGain;
+      TargetStdDev = targetStdDev;
+      MinGain = minGain;
+      MaxGain = maxGain;
 
       WindowSize = (int)( samplingRate * 2.25 );
 
@@ -72,7 +77,7 @@
       IM = new long[WindowSize];
       DD = new long[WindowSize];
 
-      O = new long[WindowSize];
+      Out = new long[WindowSize];
       InitWindow();
     }
 
@@ -132,7 +137,7 @@
       DD[_idx] = DS1;
 
       // Prevent amplification of the noise
-      gain = Math.Min(Math.Max(gain, GainMin), GainMax);
+      gain = Math.Min(Math.Max(gain, MinGain), MaxGain);
 
       // Produce the output value
       // Aold - the oldest value in the window
@@ -141,11 +146,11 @@
       var output = TargetStdDev * (Aold - MA2) / gain;
 
       // center the output at 0
-      Osum -= O[_idx];
-      Osum += (long)output;
-      O[_idx] = (long)output;
+      OutSum -= Out[_idx];
+      OutSum += (long)output;
+      Out[_idx] = (long)output;
 
-      return (int) (output - Osum / WindowSize);
+      return (int) (output - OutSum / WindowSize);
     }
 
     private void InitWindow()
@@ -158,15 +163,11 @@
           IN[i] = 0;
           IM[i] = 0;
           DD[i] = 0;
-          O[i] = 0;
+          Out[i] = 0;
         }
         _historyEmpty = false;
       }
     }
-
-    private double GainMin { get; set; } = 400;
-
-    private double GainMax { get; set; } = 13000;
 
   }
 }

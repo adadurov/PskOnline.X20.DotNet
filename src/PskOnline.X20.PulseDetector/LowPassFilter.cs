@@ -1,9 +1,9 @@
-﻿namespace PskOnline.X20.Playground.GUI
+﻿namespace PskOnline.X20.PulseDetector
 {
   using System.Collections.Generic;
   using System.Linq;
 
-  class LowPassFilter
+  public class LowPassFilter
   {
     MathNet.Filtering.FIR.OnlineFirFilter _filter = new MathNet.Filtering.FIR.OnlineFirFilter(filter_taps);
 

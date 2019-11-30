@@ -9,7 +9,7 @@
   using System.Collections.Concurrent;
   using System.Diagnostics;
   using System.Collections.Generic;
-  using PskOnline.X20.Math;
+  using PskOnline.X20.PulseDetector;
 
   public partial class Form1 : Form
   {
@@ -46,8 +46,11 @@
       _newFilteredSamplesBuffer = new List<int>(2 * MaxNumberOfSamplesOnScreen);
 
       _signalNormalizer = new StdDevStabiizer(
-        SamplingRate,
-        new StdDevStabilizerParams { MinGain = 200, MaxGain = 13000, DSN = 3337 });
+        samplingRate : SamplingRate,
+        minGain : 200, 
+        maxGain : 13000, 
+        targetStdDev : 3337
+      );
 
       _lpFilter = new LowPassFilter();
       InitializeComponent();
