@@ -3,6 +3,8 @@
   using Microsoft.Extensions.Logging;
   using NUnit.Framework;
   using Shouldly;
+  using System;
+  using System.Threading;
 
   [TestFixture]
   public class X20Device_Test
@@ -88,16 +90,8 @@
     [Explicit]
     public void GetPhysioData_Smoke()
     {
-      var usePpgResponse = _device.UsePpgWaveform();
-      // Checkpoint 1
-      usePpgResponse.ShouldBeTrue();
-
-      var startResponse = _device.StartMeasurement();
-      // Checkpoint 2
-      startResponse.ShouldBeTrue();
-
-      var package = _device.GetPhysioData();
-
+      var package = DataTransferTestHelper.RetrieveDataOnceOrFail(_device, _logger, TimeSpan.FromSeconds(1));
+      
       package.ShouldNotBeNull();
 
       if (package != null)
@@ -122,10 +116,10 @@
 
       // the pause before overflow occurs
       // depends on the size of the buffer in the firmware
-      System.Threading.Thread.Sleep(3000);
+      Thread.Sleep(3000);
 
-      var package1 = _device.GetPhysioData();
-      var package2 = _device.GetPhysioData();
+      var package1 = DataTransferTestHelper.RetrieveDataOnceOrFail(_device, _logger, TimeSpan.FromSeconds(1));
+      var package2 = DataTransferTestHelper.RetrieveDataOnceOrFail(_device, _logger, TimeSpan.FromSeconds(1)); ;
 
       // checkpoint...
       package1.ShouldNotBeNull();

@@ -42,65 +42,10 @@
     {
       var timeLimit = TimeSpan.FromSeconds(1);
 
-      var dataPackages = new List<PhysioDataPackage>();
-      var samplesCount = 0;
-      var buffer = new byte[512];
+      var packages = DataTransferTestHelper.RetrieveDataForPeriod(_device, _logger, timeLimit);
 
-      var usePpgResponse = _device.UsePpgWaveform();
-      // Checkpoint 1
-      usePpgResponse.ShouldBeTrue();
-
-      var startResponse = _device.StartMeasurement();
-      // Checkpoint 2
-      startResponse.ShouldBeTrue();
-
-      // Create data retrieval thread
-      var startTime = DateTime.Now;
-      var t = new System.Threading.Thread(() =>
-      {
-        while (true)
-        {
-          var package = _device.GetPhysioData();
-          dataPackages.Add(package);
-          samplesCount += package.Samples.Length;
-
-          _logger.LogInformation($"=====>");
-          _logger.LogInformation($"{package.PackageNumber}");
-          _logger.LogInformation($"{package.Samples.Length}");
-          _logger.LogInformation($"{package.RingBufferDataCount}");
-          _logger.LogInformation($"{package.RingBufferOverflows}");
-        }
-      });
-
-      // Run the data retrieval thread
-      t.Start();
-
-      // Retrieve data during timeLimit
-      while (ElapsedFrom(startTime) < timeLimit)
-      {
-        System.Threading.Thread.Sleep(50);
-      }
-
-      // stop the data retrieval thread
-      t.Abort();
-
-      var actualTime = ElapsedFrom(startTime);
-
-      var stopResponse = _device.StopMeasurement();
-      // Checkpoint 3
-      stopResponse.ShouldBeTrue();
-
-      _logger.LogInformation($"Ran for {actualTime.TotalSeconds} seconds");
-      _logger.LogInformation($"Received {dataPackages.Count} packages");
-      _logger.LogInformation($"Received {samplesCount} samples");
-
-      // Checkpoint 4
-      samplesCount.ShouldBeGreaterThan(0);
-    }
-
-    private TimeSpan ElapsedFrom(DateTime startTime)
-    {
-      return DateTime.Now - startTime;
+      // Checkpoint
+      packages.Count.ShouldBeGreaterThan(0);
     }
 
     [Test]
@@ -108,7 +53,7 @@
     public void DataTransfer_Ramp_5s()
     {
       _device.UseRamp();
-      var packages = RetrieveDataForPeriod(TimeSpan.FromSeconds(5));
+      var packages = DataTransferTestHelper.RetrieveDataForPeriod(_device, _logger, TimeSpan.FromSeconds(5));
       int? lastSample = null;
 
       foreach (var package in packages)
@@ -141,80 +86,16 @@
     [Explicit]
     public void DataTransfer_SamplingRate_10s()
     {
-      RetrieveDataForPeriod(TimeSpan.FromSeconds(10));
-    }
-
-    private List<PhysioDataPackage> RetrieveDataForPeriod(TimeSpan timeLimit)
-    {
-      var dataPackages = new List<PhysioDataPackage>();
-      var samplesCount = 0;
-      var buffer = new byte[512];
-
-      var startResponse = _device.StartMeasurement();
-      // Checkpoint 1
-      startResponse.ShouldBeTrue();
-
-      // Create data retrieval thread
-      var startTime = DateTime.Now;
-      var t = new System.Threading.Thread(() =>
-      {
-        while (true)
-        {
-          var package = _device.GetPhysioData();
-          dataPackages.Add(package);
-          samplesCount += package.Samples.Length;
-
-          if (false)
-          {
-            _logger.LogInformation($"=====>");
-            _logger.LogInformation($"{package.PackageNumber}");
-            _logger.LogInformation($"{package.Samples.Length}");
-            _logger.LogInformation($"{package.RingBufferDataCount}");
-            _logger.LogInformation($"{package.RingBufferOverflows}");
-          }
-        }
-      });
-
-      // Run the data retrieval thread
-      t.Start();
-
-      // Retrieve data during timeLimit
-      while (ElapsedFrom(startTime) < timeLimit)
-      {
-        System.Threading.Thread.Sleep(50);
-      }
-
-      // stop the data retrieval thread
-      t.Abort();
-
-      var actualTime = ElapsedFrom(startTime);
-
-      var stopResponse = _device.StopMeasurement();
-      // Checkpoint 2
-      stopResponse.ShouldBeTrue();
-
-      _logger.LogInformation($"Ran for {actualTime.TotalSeconds} seconds");
-      _logger.LogInformation($"Received {dataPackages.Count} packages");
-      _logger.LogInformation($"Received {samplesCount} samples");
-
-      // Checkpoint 3
-      Assert.That(
-        samplesCount,
-        Is.EqualTo((int)(SamplingRate * actualTime.TotalSeconds))
-        .Within(6)
-        .Percent
-        );
-
-      return dataPackages;
+      DataTransferTestHelper.RetrieveDataForPeriod(_device, _logger, TimeSpan.FromSeconds(10));
     }
 
     [Test]
     [Explicit]
     public void DataTransfer_SamplingRate_Repeat_2x5s()
     {
-      RetrieveDataForPeriod(TimeSpan.FromSeconds(5));
+      DataTransferTestHelper.RetrieveDataForPeriod(_device, _logger, TimeSpan.FromSeconds(5));
       System.Threading.Thread.Sleep(1000);
-      RetrieveDataForPeriod(TimeSpan.FromSeconds(5));
+      DataTransferTestHelper.RetrieveDataForPeriod(_device, _logger, TimeSpan.FromSeconds(5));
     }
 
   }

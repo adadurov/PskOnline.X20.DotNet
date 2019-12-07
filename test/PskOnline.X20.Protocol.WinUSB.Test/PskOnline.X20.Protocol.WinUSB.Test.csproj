@@ -44,6 +44,7 @@
     <Compile Include="..\..\CommonAssemblyInfo.cs">
       <Link>CommonAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="DataTransferTestHelper.cs" />
     <Compile Include="Functional\CmdGetCapabilitiesDescriptor_Test.cs" />
     <Compile Include="UAT\DataTransfer_UAT_Test.cs" />
     <Compile Include="Functional\DataTransfer_Test.cs" />
