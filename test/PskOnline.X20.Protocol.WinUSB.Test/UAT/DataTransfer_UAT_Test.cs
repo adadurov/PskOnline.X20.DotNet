@@ -5,6 +5,7 @@
   using Shouldly;
   using System;
   using System.Collections.Generic;
+  using System.Linq;
 
   [TestFixture]
   public class DataTransfer_UAT_Test
@@ -17,7 +18,6 @@
     public void Setup()
     {
       _logger = SerilogHelper.CreateLogger(nameof(DataTransfer_UAT_Test));
-      
     }
 
     [TearDown]
@@ -43,7 +43,6 @@
 
         var dataPackages = new List<PhysioDataPackage>();
         var samplesCount = 0;
-        var buffer = new byte[512];
 
         var usePpgResponse = device.UsePpgWaveform();
         // Checkpoint 1
@@ -115,8 +114,8 @@
     {
       for (var i = 0; i < 40; ++i)
       {
-        RetrieveDataForPeriod(TimeSpan.FromMinutes(3.5));
-        System.Threading.Thread.Sleep(30000);
+        RetrieveDataForPeriod(TimeSpan.FromSeconds(3 * 60 + 55));
+        System.Threading.Thread.Sleep(5000);
       }
     }
 
@@ -128,6 +127,29 @@
       {
         RetrieveDataForPeriod(TimeSpan.FromSeconds(30));
         System.Threading.Thread.Sleep(1000);
+      }
+    }
+
+    [Test]
+    [Explicit]
+    public void DataTransfer_Ramp_10x3s()
+    {
+      var timeLimit = TimeSpan.FromSeconds(3);
+
+      var fac = SerilogHelper.GetLoggerFactory();
+
+      using (var device = DeviceHelper.GetFirstSuitableDevice(fac))
+      {
+        for (var i = 0; i < 10; ++i)
+        {
+          _logger.LogInformation($"Started iteration {i}");
+          DataTransferTestHelper.RunRampTest(device, timeLimit, _logger);
+          System.Threading.Thread.Sleep(200);
+
+          DataTransferTestHelper.RetrievePpgDataForPeriod(device, TimeSpan.FromSeconds(1));
+          System.Threading.Thread.Sleep(200);
+          _logger.LogInformation($"Completed iteration {i}");
+        }
       }
     }
 

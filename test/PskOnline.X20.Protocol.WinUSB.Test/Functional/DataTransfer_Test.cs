@@ -5,7 +5,7 @@
   using PskOnline.X20.Protocol.Internal;
   using Shouldly;
   using System;
-  using System.Collections.Generic;
+  using System.Linq;
 
   [TestFixture]
   public class DataTransfer_Test
@@ -42,60 +42,69 @@
     {
       var timeLimit = TimeSpan.FromSeconds(1);
 
-      var packages = DataTransferTestHelper.RetrieveDataForPeriod(_device, _logger, timeLimit);
+      var result = DataTransferTestHelper.RetrievePpgDataForPeriod(_device, timeLimit);
 
       // Checkpoint
-      packages.Count.ShouldBeGreaterThan(0);
+      result.Packages.Count.ShouldBeGreaterThan(0);
     }
 
     [Test]
     [Explicit]
-    public void DataTransfer_Ramp_5s()
+    public void DataTransfer_Ramp_Smoke_1s()
     {
-      _device.UseRamp();
-      var packages = DataTransferTestHelper.RetrieveDataForPeriod(_device, _logger, TimeSpan.FromSeconds(5));
-      int? lastSample = null;
+      var timeLimit = TimeSpan.FromSeconds(1);
 
-      foreach (var package in packages)
-      {
-        _logger.LogInformation($"=====>");
-        foreach (var sample in package.Samples)
-        {
-          _logger.LogInformation(sample.ToString());
-        }
-      }
-
-      for(var pi = 0; pi < packages.Count; ++pi)
-      {
-        var package = packages[pi];
-        for (var si = 0; si < package.Samples.Length; ++si)
-        {
-          var sample = package.Samples[si];
-          if (lastSample.HasValue)
-          {
-            Assert.That(sample, Is.EqualTo(lastSample.Value + 1), 
-              $"Package #{pi}, sample #{si} doesn't match the expected ramp value of {lastSample.Value}");
-          }
-          lastSample = sample;
-        }
-      }
-
+      DataTransferTestHelper.RunRampTest(_device, timeLimit, _logger);
     }
 
     [Test]
     [Explicit]
     public void DataTransfer_SamplingRate_10s()
     {
-      DataTransferTestHelper.RetrieveDataForPeriod(_device, _logger, TimeSpan.FromSeconds(10));
+      var result = DataTransferTestHelper.RetrievePpgDataForPeriod(_device, TimeSpan.FromSeconds(10));
+
+      var totalSamples = result.Packages.Sum(p => p.Samples.Length);
+
+      // Checkpoint 3
+      Assert.That(
+        totalSamples,
+        Is.EqualTo(SamplingRate * result.ActualRuntime.TotalSeconds)
+        .Within(6)
+        .Percent
+        );
+
     }
 
     [Test]
     [Explicit]
     public void DataTransfer_SamplingRate_Repeat_2x5s()
     {
-      DataTransferTestHelper.RetrieveDataForPeriod(_device, _logger, TimeSpan.FromSeconds(5));
-      System.Threading.Thread.Sleep(1000);
-      DataTransferTestHelper.RetrieveDataForPeriod(_device, _logger, TimeSpan.FromSeconds(5));
+      {
+        var result = DataTransferTestHelper.RetrievePpgDataForPeriod(_device, TimeSpan.FromSeconds(5));
+        var totalSamples = result.Packages.Sum(p => p.Samples.Length);
+
+        // Checkpoint 3
+        Assert.That(
+          totalSamples,
+          Is.EqualTo(SamplingRate * result.ActualRuntime.TotalSeconds)
+          .Within(6)
+          .Percent
+          );
+      }
+      System.Threading.Thread.Sleep(500);
+
+      {
+        var result = DataTransferTestHelper.RetrievePpgDataForPeriod(_device, TimeSpan.FromSeconds(5));
+        var totalSamples = result.Packages.Sum(p => p.Samples.Length);
+
+        // Checkpoint 3
+        Assert.That(
+          totalSamples,
+          Is.EqualTo(SamplingRate * result.ActualRuntime.TotalSeconds)
+          .Within(6)
+          .Percent
+          );
+      }
     }
 
   }

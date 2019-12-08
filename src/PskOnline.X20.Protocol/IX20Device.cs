@@ -19,5 +19,8 @@
     bool UsePpgWaveform();
 
     PhysioDataPackage GetPhysioData();
+
+    PhysioDataPackage GetPhysioData(int timeoutMsec);
+
   }
 }

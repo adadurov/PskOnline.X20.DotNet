@@ -90,7 +90,7 @@
     [Explicit]
     public void GetPhysioData_Smoke()
     {
-      var package = DataTransferTestHelper.RetrieveDataOnceOrFail(_device, _logger, TimeSpan.FromSeconds(1));
+      var package = DataTransferTestHelper.TryRetrieveDataPackage(_device, TimeSpan.FromSeconds(1));
       
       package.ShouldNotBeNull();
 
@@ -116,10 +116,10 @@
 
       // the pause before overflow occurs
       // depends on the size of the buffer in the firmware
-      Thread.Sleep(3000);
+      Thread.Sleep(5000);
 
-      var package1 = DataTransferTestHelper.RetrieveDataOnceOrFail(_device, _logger, TimeSpan.FromSeconds(1));
-      var package2 = DataTransferTestHelper.RetrieveDataOnceOrFail(_device, _logger, TimeSpan.FromSeconds(1)); ;
+      var package1 = _device.GetPhysioData();
+      var package2 = _device.GetPhysioData();
 
       // checkpoint...
       package1.ShouldNotBeNull();
