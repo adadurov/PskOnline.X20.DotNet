@@ -67,5 +67,17 @@
     {
       return _deviceImpl.GetPhysioData();
     }
+
+    public PhysioDataPackage GetPhysioData(int timeoutMSec)
+    {
+      var buffer = new byte[512];
+      var count = GetDataPipe().Read(buffer, timeoutMSec);
+      if (count > X20Constants.PhysioPackageHeaderSize)
+      {
+        return buffer.UsbDataPackageFromByteArray();
+      }
+      return null;
+    }
+
   }
 }

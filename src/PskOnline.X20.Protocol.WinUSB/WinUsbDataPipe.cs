@@ -27,5 +27,19 @@
     {
       return _pipe.Read(buffer);
     }
+
+    public int Read(byte[] buffer, int timeoutMSec)
+    {
+      var asyncResult = _pipe.BeginRead(buffer, 0, buffer.Length, null, null);
+
+      var waitResult = asyncResult.AsyncWaitHandle.WaitOne(timeoutMSec);
+
+      if (waitResult)
+      {
+        return _pipe.EndRead(asyncResult);
+      }
+
+      return 0;
+    }
   }
 }

@@ -2,9 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Product>PskOnline Heart Rate Sensor</Product>
-    <AssemblyName>PskOnline.X20.Protocol</AssemblyName>
-    <RootNamespace>PskOnline.X20.Protocol</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
