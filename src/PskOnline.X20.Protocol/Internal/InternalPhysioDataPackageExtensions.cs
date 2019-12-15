@@ -27,7 +27,7 @@
           Flags = s.flags,
           Reserved = s.reserved,
           RingBufferOverflows = s.ring_buffer_overflows,
-          RingBufferDataCount = s.num_samples,
+          RingBufferDataCount = s.ring_buffer_data_count,
           Samples = samples
         };
       }
