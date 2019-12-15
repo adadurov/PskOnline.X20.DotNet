@@ -45,14 +45,14 @@
     /// <param name="_logger"></param>
     /// <param name="timeLimit"></param>
     /// <returns></returns>
-    public static DataTransferResult RetrievePpgDataForPeriod(IX20Device device, TimeSpan timeLimit)
+    public static DataTransferResult RetrievePpgDataForPeriod(IX20Device device, TimeSpan timeLimit, ILogger logger)
     {
       device.UsePpgWaveform();
 
-      return RetrieveDataForPeriod(device, timeLimit);
+      return RetrieveDataForPeriod(device, timeLimit, logger);
     }
 
-    public static DataTransferResult RetrieveDataForPeriod(IX20Device device, TimeSpan timeLimit)
+    public static DataTransferResult RetrieveDataForPeriod(IX20Device device, TimeSpan timeLimit, ILogger logger)
     {
       var SamplingRate = device.GetCapabilities().SamplingRate;
       var dataPackages = new List<PhysioDataPackage>();
@@ -79,6 +79,9 @@
       // Checkpoint 2
       stopResponse.ShouldBeTrue();
 
+      var totalSamples = dataPackages.Sum(p => p.Samples.Length);
+      logger.LogInformation($"Retrieved {totalSamples}");
+
       return new DataTransferResult
       {
         Packages = dataPackages,
@@ -92,36 +95,31 @@
       // that might have been queued for transmission before,
       // but doesn't contain the ramp data
       device.StopMeasurement();
-      RetrieveDataForPeriod(device, TimeSpan.FromMilliseconds(500));
+      RetrieveDataForPeriod(device, TimeSpan.FromMilliseconds(500), logger);
 
       device.UseRamp();
       
-      var result = RetrieveDataForPeriod(device, timeLimit);
+      var result = RetrieveDataForPeriod(device, timeLimit, logger);
       
       var totalSamples = result.Packages.Sum(p => p.Samples.Length);
 
+      logger.LogInformation($"Retrieved {totalSamples}");
+
       var SamplingRate = device.GetCapabilities().SamplingRate;
-      // Checkpoint 3
-      Assert.That(
-        totalSamples,
-        Is.EqualTo(SamplingRate * result.ActualRuntime.TotalSeconds)
-        .Within(6)
-        .Percent
-        );
 
       int? lastSample = null;
 
-      for (var pi = 0; pi < result.Packages.Count; ++pi)
-      {
-        logger.LogInformation($">>>>>>");
-        var package = result.Packages[pi];
-        for (var si = 0; si < package.Samples.Length; ++si)
-        {
-          var sample = package.Samples[si];
-          logger.LogInformation(sample.ToString());
-        }
-      }
-      logger.LogInformation($"<<<<<<");
+      //for (var pi = 0; pi < result.Packages.Count; ++pi)
+      //{
+      //  logger.LogInformation($">>>>>>");
+      //  var package = result.Packages[pi];
+      //  for (var si = 0; si < package.Samples.Length; ++si)
+      //  {
+      //    var sample = package.Samples[si];
+      //    logger.LogInformation(sample.ToString());
+      //  }
+      //}
+      //logger.LogInformation($"<<<<<<");
 
 
       for (var pi = 0; pi < result.Packages.Count; ++pi)

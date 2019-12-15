@@ -30,70 +30,71 @@
       return DateTime.Now - startTime;
     }
 
-    private void RetrieveDataForPeriod(TimeSpan timeLimit)
+    private DataTransferResult RetrieveDataForPeriod(
+      TimeSpan timeLimit, 
+      string testName, 
+      Action<IX20Device> waveformModeSelector,
+      Action<DataTransferResult> resultValidator)
     {
       var fac = SerilogHelper.GetLoggerFactory();
+      var logger = fac.CreateLogger(testName);
       using (var device = DeviceHelper.GetFirstSuitableDevice(fac))
       {
 
         var capabilities = device.GetCapabilities();
 
-        // Checkpoint 0
+        // Checkpoint
         capabilities.SamplingRate.ShouldBe((int)SamplingRate);
 
-        var dataPackages = new List<PhysioDataPackage>();
-        var samplesCount = 0;
+        waveformModeSelector(device);
+        var result = DataTransferTestHelper.RetrieveDataForPeriod(device, timeLimit, logger);
 
-        var usePpgResponse = device.UsePpgWaveform();
-        // Checkpoint 1
-        usePpgResponse.ShouldBeTrue();
+        var samplesCount = result.Packages.Sum(p => p.Samples.Length);
 
-        var startResponse = device.StartMeasurement();
-        // Checkpoint 2
-        startResponse.ShouldBeTrue();
+        _logger.LogInformation($"Time:     {result.ActualRuntime.TotalSeconds} seconds");
+        _logger.LogInformation($"Packages: {result.Packages.Count}");
+        _logger.LogInformation($"Samples:  {samplesCount}");
 
-        // Create data retrieval thread
-        var startTime = DateTime.Now;
-        var t = new System.Threading.Thread(() =>
+        // Checkpoints
+
+        resultValidator?.Invoke(result);
+
+        // Checkpoint
+        result.Packages.Count.ShouldBeGreaterThan(0);
+
+        for (var i = 0; i < result.Packages.Count; ++i)
         {
-          while (true)
-          {
-            var package = device.GetPhysioData();
-            dataPackages.Add(package);
-            samplesCount += package.Samples.Length;
-          }
-        });
+          var p = result.Packages[i];
+          _logger.LogInformation(
+            $"Package [{i}]. Number:{p.PackageNumber} / remaining FIFO data: {p.RingBufferDataCount} / overflows: {p.RingBufferOverflows}");
 
-        // Run the data retrieval thread
-        t.Start();
-
-        // Retrieve data during timeLimit
-        while (ElapsedFrom(startTime) < timeLimit)
-        {
-          System.Threading.Thread.Sleep(50);
+          // Checkpoint
+          p.RingBufferOverflows.ShouldBe(0);
         }
 
-        // stop the data retrieval thread
-        t.Abort();
-        device.StopMeasurement();
+        // Checkpoint
+        // Check for sequential package numbers
+        var numbers = result.Packages.Select(p => p.PackageNumber);
+        var nextNumbers = numbers.Skip(1);
+        var counter = 0;
 
-        var actualTime = ElapsedFrom(startTime);
+        nextNumbers.Zip(numbers, (next, current) =>
+        {
+          var delta = (int)(next - current);
+          delta.ShouldBe(1, $"Non-sequential package numbers ({current}, {next}) for #{counter}: delta = {delta}");
+          counter++;
+          return delta;
+        }).ToList();
 
-        var stopResponse = device.StopMeasurement();
-        // Checkpoint 3
-        stopResponse.ShouldBeTrue();
-
-        _logger.LogInformation($"Ran for {actualTime.TotalSeconds} seconds");
-        _logger.LogInformation($"Received {dataPackages.Count} packages");
-        _logger.LogInformation($"Received {samplesCount} samples");
-
-        // Checkpoint 4
+        // Checkpoint
         Assert.That(
           samplesCount,
-          Is.EqualTo((int)(SamplingRate * actualTime.TotalSeconds))
+          Is.EqualTo((int)(SamplingRate * result.ActualRuntime.TotalSeconds))
           .Within(5)
           .Percent
           );
+
+        return result;
       }
     }
 
@@ -103,7 +104,11 @@
     {
       for (var i = 0; i < 10; ++i)
       {
-        RetrieveDataForPeriod(TimeSpan.FromMinutes(6));
+        RetrieveDataForPeriod(
+          TimeSpan.FromMinutes(6),
+          nameof(DataTransfer_Repeat_10x6min),
+          device => device.UsePpgWaveform(),
+          null);
         System.Threading.Thread.Sleep(2000);
       }
     }
@@ -114,7 +119,11 @@
     {
       for (var i = 0; i < 40; ++i)
       {
-        RetrieveDataForPeriod(TimeSpan.FromSeconds(3 * 60 + 55));
+        RetrieveDataForPeriod(
+          TimeSpan.FromSeconds(3 * 60 + 55), 
+          nameof(DataTransfer_Repeat_10x30sec),
+          device => device.UsePpgWaveform(),
+          null);
         System.Threading.Thread.Sleep(5000);
       }
     }
@@ -125,16 +134,73 @@
     {
       for (var i = 0; i < 10; ++i)
       {
-        RetrieveDataForPeriod(TimeSpan.FromSeconds(30));
+        RetrieveDataForPeriod(
+          TimeSpan.FromSeconds(29), 
+          nameof(DataTransfer_Repeat_10x30sec),
+          device => device.UsePpgWaveform(),
+          null);
         System.Threading.Thread.Sleep(1000);
       }
     }
 
     [Test]
     [Explicit]
-    public void DataTransfer_Ramp_10x3s()
+    public void DataTransfer_Ramp_10x30sec()
     {
-      var timeLimit = TimeSpan.FromSeconds(3);
+      for (var i = 0; i < 10; ++i)
+      {
+        var rampErrors = new List<string>();
+        try
+        {
+          RetrieveDataForPeriod(
+            TimeSpan.FromSeconds(29),
+            nameof(DataTransfer_Repeat_10x30sec),
+            device => device.UseRamp(),
+            (r) =>
+            {
+              // validate that all samples are sequential
+
+              int? lastValue = null;
+              for (var k = 0; k < r.Packages.Count; ++k)
+              {
+                var p = r.Packages[k];
+                for (var j = 0; j < p.Samples.Length; ++j)
+                {
+                  if( lastValue.HasValue)
+                  {
+                    var next = p.Samples[j];
+                    var delta = next - lastValue;
+                    if (delta != 1)
+                    {
+                      rampErrors.Add(
+                        $"Non-sequential samples in the ramp. Package: {k}, sample {j}: {lastValue.Value}, {next}. " +
+                        $"FIFO first pointer: {p.Reserved}");
+                    }
+                  }
+                  lastValue = p.Samples[j];
+                }
+              }
+            });
+        }
+
+        finally
+        {
+          foreach (string s in rampErrors)
+          {
+            _logger.LogError(s);
+          }
+        }
+
+        System.Threading.Thread.Sleep(1000);
+      }
+    }
+
+
+    [Test]
+    [Explicit]
+    public void DataTransfer_Ramp_10x10s()
+    {
+      var timeLimit = TimeSpan.FromSeconds(10);
 
       var fac = SerilogHelper.GetLoggerFactory();
 
@@ -144,11 +210,11 @@
         {
           _logger.LogInformation($"Started iteration {i}");
           DataTransferTestHelper.RunRampTest(device, timeLimit, _logger);
-          System.Threading.Thread.Sleep(200);
+          System.Threading.Thread.Sleep(2000);
 
-          DataTransferTestHelper.RetrievePpgDataForPeriod(device, TimeSpan.FromSeconds(1));
-          System.Threading.Thread.Sleep(200);
-          _logger.LogInformation($"Completed iteration {i}");
+          //DataTransferTestHelper.RetrievePpgDataForPeriod(device, TimeSpan.FromSeconds(1), _logger);
+          //_logger.LogInformation($"Completed iteration {i}");
+          //System.Threading.Thread.Sleep(200);
         }
       }
     }
