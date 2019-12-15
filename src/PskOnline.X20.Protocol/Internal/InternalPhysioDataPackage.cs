@@ -18,7 +18,7 @@
     public UInt32 reserved;
 
     [FieldOffset(12)]
-    public UInt32 ring_buffer_overflows;
+    public Int32 ring_buffer_overflows;
 
     [FieldOffset(16)]
     public UInt16 ring_buffer_data_count;

@@ -10,9 +10,9 @@
 
     public UInt32 Reserved { get; set; }
 
-    public UInt32 RingBufferOverflows { get; set; }
+    public Int32 RingBufferOverflows { get; set; }
 
-    public UInt16 RingBufferDataCount { get; set; }
+    public Int32 RingBufferDataCount { get; set; }
 
     public Int32[] Samples { get; set; }
   }
