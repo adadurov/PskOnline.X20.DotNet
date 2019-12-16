@@ -7,19 +7,15 @@
   {
     public static PhysioDataPackage UsbDataPackageFromByteArray(this byte[] bytes)
     {
+      if (bytes == null) return null;
+
       var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
       try
       {
         var s = (InternalPhysioDataPackage)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(InternalPhysioDataPackage));
 
         // use s.num_samples to convert remaining part of the package to integer samples
-        var start = 20;
-        var end = s.num_samples * sizeof(UInt32);
-        var samples = new int[s.num_samples];
-        for (int i = 0; i < s.num_samples; ++i)
-        {
-          samples[i] = BitConverter.ToInt32(bytes, start + i * sizeof(int));
-        }
+        int[] samples = ConvertToSamples(bytes, s);
 
         return new PhysioDataPackage
         {
@@ -35,6 +31,25 @@
       {
         handle.Free();
       }
+    }
+
+    private static int[] ConvertToSamples(byte[] bytes, InternalPhysioDataPackage s)
+    {
+      const int sampleSize = 3;
+      var samples = new int[s.num_samples];
+      for (int i = 0; i < s.num_samples; ++i)
+      {
+        // Generation 0
+        samples[i] =
+          bytes[sampleSize * i] +
+          (bytes[sampleSize * i + 1] << 8) +
+          (bytes[sampleSize * i + 2] << 16);
+
+        // Generation 1
+        // BitConverter.ToInt32(bytes, start + i * sizeof(int));
+      }
+
+      return samples;
     }
   }
 }
