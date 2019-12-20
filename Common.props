@@ -1,6 +1,6 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <Product>PskOnline X20 Heart Rhythm Sensor</Product>
+    <Product>PskOnline X20 PPG Waveform Sensor .NET support library</Product>
     <Company>Psk-Online</Company>
     <Copyright>Copyright (c) 2019 PskOnline.ru</Copyright>
   </PropertyGroup>
