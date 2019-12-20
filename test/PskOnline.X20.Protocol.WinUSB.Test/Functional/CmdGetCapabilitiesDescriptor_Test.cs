@@ -56,7 +56,7 @@
 
     [Test]
     [Explicit]
-    public void GetCapabilitiesDescriptor_Should_Return_Generation_0()
+    public void GetCapabilitiesDescriptor_Should_Have_Generation_0()
     {
       var response = (CmdGetCapabilitiesDescriptorResponse)
         new CmdGetCapabilitiesDescriptor(_logger).Execute(_device.GetUsbControlPipe());
@@ -66,6 +66,17 @@
       ((int)response.CapabilitiesDescriptor.generation).ShouldBe(0);
     }
 
+    [Test]
+    [Explicit]
+    public void GetCapabilitiesDescriptor_Should_Have_SamplingRate_400()
+    {
+      var response = (CmdGetCapabilitiesDescriptorResponse)
+        new CmdGetCapabilitiesDescriptor(_logger).Execute(_device.GetUsbControlPipe());
+
+      response.Succeeded.ShouldBe(true);
+
+      ((int)response.CapabilitiesDescriptor.samplingRate).ShouldBe(400);
+    }
 
     [Test]
     [Explicit]

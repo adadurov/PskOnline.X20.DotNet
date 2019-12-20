@@ -42,7 +42,7 @@
     {
       var timeLimit = TimeSpan.FromSeconds(1);
 
-      var result = DataTransferTestHelper.RetrievePpgDataForPeriod(_device, timeLimit);
+      var result = DataTransferTestHelper.RetrievePpgDataForPeriod(_device, timeLimit, _logger);
 
       // Checkpoint
       result.Packages.Count.ShouldBeGreaterThan(0);
@@ -61,7 +61,7 @@
     [Explicit]
     public void DataTransfer_SamplingRate_10s()
     {
-      var result = DataTransferTestHelper.RetrievePpgDataForPeriod(_device, TimeSpan.FromSeconds(10));
+      var result = DataTransferTestHelper.RetrievePpgDataForPeriod(_device, TimeSpan.FromSeconds(10), _logger);
 
       var totalSamples = result.Packages.Sum(p => p.Samples.Length);
 
@@ -72,7 +72,15 @@
         .Within(6)
         .Percent
         );
+    }
 
+    [Test]
+    [Explicit]
+    public void DataTransfer_Ramp_10s()
+    {
+      var time = TimeSpan.FromSeconds(10);
+
+      DataTransferTestHelper.RunRampTest(_device, time, _logger);
     }
 
     [Test]
@@ -80,7 +88,7 @@
     public void DataTransfer_SamplingRate_Repeat_2x5s()
     {
       {
-        var result = DataTransferTestHelper.RetrievePpgDataForPeriod(_device, TimeSpan.FromSeconds(5));
+        var result = DataTransferTestHelper.RetrievePpgDataForPeriod(_device, TimeSpan.FromSeconds(5), _logger);
         var totalSamples = result.Packages.Sum(p => p.Samples.Length);
 
         // Checkpoint 3
@@ -94,7 +102,7 @@
       System.Threading.Thread.Sleep(500);
 
       {
-        var result = DataTransferTestHelper.RetrievePpgDataForPeriod(_device, TimeSpan.FromSeconds(5));
+        var result = DataTransferTestHelper.RetrievePpgDataForPeriod(_device, TimeSpan.FromSeconds(5), _logger);
         var totalSamples = result.Packages.Sum(p => p.Samples.Length);
 
         // Checkpoint 3

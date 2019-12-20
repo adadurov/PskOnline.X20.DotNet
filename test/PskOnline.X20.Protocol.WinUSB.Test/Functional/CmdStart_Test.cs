@@ -40,12 +40,17 @@
     {
       int count = 0;
 
-      while (count < 1000)
+      try
       {
-        count++;
-        var response = _device.StartMeasurement();
-        response.ShouldBe(true);
-
+        while (count < 1000)
+        {
+          count++;
+          var response = _device.StartMeasurement();
+          response.ShouldBe(true);
+        }
+      }
+      finally
+      {
         _logger.LogInformation($"START executed {count} times.");
       }
     }
