@@ -11,6 +11,8 @@
   using System.Collections.Generic;
   using PskOnline.X20.Math;
 
+  delegate void ClearDeviceInfoDelegate();
+
   public partial class Form1 : Form
   {
     ConcurrentQueue<PhysioDataPackage> _analysisQueue;
@@ -25,11 +27,12 @@
     OxyPlot.Axes.Axis _filteredAxis;
     OxyPlot.Axes.Axis _unfilteredAxis;
 
-    StdDevStabiizer _signalNormalizer;
+    StdDevStabilizer _signalNormalizer;
 
     LowPassFilter _lpFilter;
 
     IX20Device _device;
+    FileWriter _fileWriter;
 
     double SamplingRate { get; set; } = 400.0;
 
@@ -44,12 +47,14 @@
       _newUnfilteredSamplesBuffer = new List<int>(2 * MaxNumberOfSamplesOnScreen);
       _newFilteredSamplesBuffer = new List<int>(2 * MaxNumberOfSamplesOnScreen);
 
-      _signalNormalizer = new StdDevStabiizer(
+      _signalNormalizer = new StdDevStabilizer(
         SamplingRate,
         new StdDevStabilizerParams { MinGain = 200, MaxGain = 13000, DSN = 3337 });
 
       _lpFilter = new LowPassFilter();
       InitializeComponent();
+
+      ClearDeviceDetails();
     }
 
     private void Form1_FormClosed(object sender, FormClosedEventArgs e)
@@ -57,6 +62,7 @@
       _thread?.Abort();
       _device?.StopMeasurement();
       _device?.Dispose();
+      _fileWriter?.Dispose();
     }
 
     private void Form1_Load(object sender, EventArgs e)
@@ -137,6 +143,8 @@
       _signalNormalizer.NormalizeDataInPlace(_newFilteredSamplesBuffer);
       _lpFilter.FilterInPlace(_newFilteredSamplesBuffer);
 
+      WriteSamples(_fileWriter, _newFilteredSamplesBuffer, _newUnfilteredSamplesBuffer);
+
       // find out which samples must be visible
       var visibleUnfilteredSamples = GetVisibleSamplesAndCache(_newUnfilteredSamplesBuffer, _visibleUnfilteredSamples);
 
@@ -154,7 +162,7 @@
         var filteredValue = visibleFilteredSamples[c];
 
         unfilteredPoints[c] = new OxyPlot.DataPoint(time, value);
-        filteredPoints[c] =   new OxyPlot.DataPoint(time, filteredValue);
+        filteredPoints[c] = new OxyPlot.DataPoint(time, filteredValue);
       }
 
       _unfilteredSeries.Points.Clear();
@@ -163,6 +171,20 @@
       _filteredSeries.Points.AddRange(filteredPoints);
 
       plotView1.InvalidatePlot(true);
+    }
+
+    private void WriteSamples(
+      FileWriter fileWriter,
+      List<int> newFilteredSamples, 
+      List<int> newUnfilteredSamples)
+    {
+      if (checkBoxDoRecord.Checked)
+      {
+        for (var i = 0; i < newFilteredSamples.Count; ++i)
+        {
+          fileWriter?.WriteSample(newUnfilteredSamples[i], newFilteredSamples[i]);
+        }
+      }
     }
 
     /// <summary>
@@ -220,7 +242,9 @@
       finally
       {
         _device = null;
-        ClearDeviceDetails();
+
+        ClearDeviceInfoDelegate d = () => ClearDeviceDetails();
+        Invoke(d);
       }
     }
 
@@ -287,8 +311,9 @@
         {
           UpdatePlotData();
         }
-        catch
+        catch (Exception ex)
         {
+          Debug.WriteLine(ex.Message);
         }
       }
     }
@@ -307,6 +332,7 @@
 
     private void findPlotsButton_Click(object sender, EventArgs e)
     {
+      if (_visibleFilteredSamples.Count > 0)
       {
         var minFiltered = _visibleFilteredSamples.Min();
         var maxFiltered = _visibleFilteredSamples.Max();
@@ -316,14 +342,37 @@
           maxFiltered + range);
       }
 
+      if (_visibleUnfilteredSamples.Count > 0)
       {
         var minUnfiltered = _visibleUnfilteredSamples.Min();
         var maxUnfiltered = _visibleUnfilteredSamples.Max();
         var range = maxUnfiltered - minUnfiltered;
         _unfilteredAxis.Zoom(
-          minUnfiltered - range, 
+          minUnfiltered - range,
           maxUnfiltered + range);
       }
+    }
+
+    private void checkBoxDoRecord_CheckedChanged(object sender, EventArgs e)
+    {
+      if (checkBoxDoRecord.Checked)
+      {
+        _fileWriter?.Dispose();
+        _fileWriter = CreateFileWriter();
+      }
+      else
+      {
+        _fileWriter?.Dispose();
+        _fileWriter = null;
+      }
+    }
+
+    private FileWriter CreateFileWriter()
+    {
+      string timePart = DateTime.Now.ToString("yyyyMMdd_HHmm");
+      return new FileWriter
+        ("psk_x20" + textBoxFileNamePrefix.Text + "_" + timePart + ".csv",
+        _device?.GetCapabilities().RevisionInfo);
     }
   }
 }
