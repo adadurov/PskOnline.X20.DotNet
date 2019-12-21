@@ -36,6 +36,8 @@
             this.labelSerialNumber = new System.Windows.Forms.Label();
             this.labelRevision = new System.Windows.Forms.Label();
             this.labelBuildDate = new System.Windows.Forms.Label();
+            this.checkBoxDoRecord = new System.Windows.Forms.CheckBox();
+            this.textBoxFileNamePrefix = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // timer1
@@ -47,11 +49,11 @@
             this.plotView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.plotView1.Location = new System.Drawing.Point(11, 10);
+            this.plotView1.Location = new System.Drawing.Point(0, 0);
             this.plotView1.Margin = new System.Windows.Forms.Padding(2);
             this.plotView1.Name = "plotView1";
             this.plotView1.PanCursor = System.Windows.Forms.Cursors.Hand;
-            this.plotView1.Size = new System.Drawing.Size(976, 507);
+            this.plotView1.Size = new System.Drawing.Size(961, 507);
             this.plotView1.TabIndex = 0;
             this.plotView1.Text = "plotView1";
             this.plotView1.ZoomHorizontalCursor = System.Windows.Forms.Cursors.SizeWE;
@@ -83,6 +85,7 @@
             // 
             // labelSerialNumber
             // 
+            this.labelSerialNumber.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelSerialNumber.AutoSize = true;
             this.labelSerialNumber.Location = new System.Drawing.Point(188, 540);
             this.labelSerialNumber.Name = "labelSerialNumber";
@@ -92,6 +95,7 @@
             // 
             // labelRevision
             // 
+            this.labelRevision.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelRevision.AutoSize = true;
             this.labelRevision.Location = new System.Drawing.Point(311, 540);
             this.labelRevision.Name = "labelRevision";
@@ -101,18 +105,41 @@
             // 
             // labelBuildDate
             // 
+            this.labelBuildDate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelBuildDate.AutoSize = true;
-            this.labelBuildDate.Location = new System.Drawing.Point(468, 539);
+            this.labelBuildDate.Location = new System.Drawing.Point(468, 540);
             this.labelBuildDate.Name = "labelBuildDate";
             this.labelBuildDate.Size = new System.Drawing.Size(35, 13);
             this.labelBuildDate.TabIndex = 4;
             this.labelBuildDate.Text = "label1";
+            // 
+            // checkBoxDoRecord
+            // 
+            this.checkBoxDoRecord.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.checkBoxDoRecord.AutoSize = true;
+            this.checkBoxDoRecord.Location = new System.Drawing.Point(655, 540);
+            this.checkBoxDoRecord.Name = "checkBoxDoRecord";
+            this.checkBoxDoRecord.Size = new System.Drawing.Size(163, 17);
+            this.checkBoxDoRecord.TabIndex = 5;
+            this.checkBoxDoRecord.Text = "Record data to file with prefix";
+            this.checkBoxDoRecord.UseVisualStyleBackColor = true;
+            this.checkBoxDoRecord.CheckedChanged += new System.EventHandler(this.checkBoxDoRecord_CheckedChanged);
+            // 
+            // textBoxFileNamePrefix
+            // 
+            this.textBoxFileNamePrefix.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxFileNamePrefix.Location = new System.Drawing.Point(832, 538);
+            this.textBoxFileNamePrefix.Name = "textBoxFileNamePrefix";
+            this.textBoxFileNamePrefix.Size = new System.Drawing.Size(98, 20);
+            this.textBoxFileNamePrefix.TabIndex = 6;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(963, 568);
+            this.Controls.Add(this.textBoxFileNamePrefix);
+            this.Controls.Add(this.checkBoxDoRecord);
             this.Controls.Add(this.labelBuildDate);
             this.Controls.Add(this.labelRevision);
             this.Controls.Add(this.labelSerialNumber);
@@ -136,6 +163,8 @@
     private System.Windows.Forms.Label labelSerialNumber;
     private System.Windows.Forms.Label labelRevision;
     private System.Windows.Forms.Label labelBuildDate;
+    private System.Windows.Forms.CheckBox checkBoxDoRecord;
+    private System.Windows.Forms.TextBox textBoxFileNamePrefix;
   }
 }
 

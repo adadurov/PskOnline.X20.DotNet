@@ -3,7 +3,7 @@
   using System;
   using System.Collections.Generic;
 
-  public class StdDevStabiizer
+  public class StdDevStabilizer
   {
     /// <summary>
     /// Current index in the window
@@ -60,7 +60,7 @@
     /// <summary>
     /// </summary>
     /// <param name="samplingRate"></param>
-    public StdDevStabiizer(double samplingRate, StdDevStabilizerParams para)
+    public StdDevStabilizer(double samplingRate, StdDevStabilizerParams para)
     {
       TargetStdDev = para.DSN;
       GainMin = para.MinGain;
@@ -99,20 +99,24 @@
 
     private int NormalizeSingleValue(long Ain)
     {
-      _idx = (_idx + 1) % WindowSize;               // The current index in the window buffer
+      // The current index in the window buffer
+      _idx = (_idx + 1) % WindowSize;
 
-      var IM2 = (_idx + WindowSize / 2) % WindowSize;       // This index corresponids to 1/2 of the window back in time
+      // This index corresponds to 1/2 of the window back in time
+      var IM2 = (_idx + WindowSize / 2) % WindowSize;
 
-      var Aold = IN[_idx];                  // The oldest input
+      // The oldest input value
+      var Aold = IN[_idx];
 
       // update the sum of inputs over the history window
       INsum -= Aold;                         
       INsum += Ain;
       IN[_idx] = Ain;
 
-      // average of the inputs (sum(inputs) / number)
+      // Update the average of the inputs in the window
       var MA = INsum / WindowSize;
-      // store the current average in the history window
+      
+      // store the current window's average
       IM[_idx] = MA;
 
       // gain -- proportional to StdDev
