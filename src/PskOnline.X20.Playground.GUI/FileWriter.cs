@@ -12,7 +12,7 @@
 
     public string TargetFileName { get; }
 
-    public FileWriter(string fileName, string deviceFirmware)
+    public FileWriter(string fileName, string deviceFirmware, string samplingRate)
     {
       TargetFileName = fileName;
       _writer = new StreamWriter(Path.Combine(TargetaPath, fileName));
@@ -23,6 +23,8 @@
       _writer.WriteLine("hand, left | right");
       _writer.WriteLine("finger, thumb | index | middle | ring | pinky");
       _writer.WriteLine($"device, {deviceFirmware}");
+      _writer.WriteLine($"sampling_rate, {samplingRate}");
+      _writer.WriteLine("BEGIN_DATA");
     }
 
     internal void WriteSample(int value, int filteredValue)

@@ -372,7 +372,8 @@
       string timePart = DateTime.Now.ToString("yyyyMMdd_HHmm");
       return new FileWriter
         ("psk_x20" + textBoxFileNamePrefix.Text + "_" + timePart + ".csv",
-        _device?.GetCapabilities().RevisionInfo);
+        _device?.GetCapabilities().RevisionInfo,
+        _device?.GetCapabilities().SamplingRate.ToString());
     }
   }
 }
