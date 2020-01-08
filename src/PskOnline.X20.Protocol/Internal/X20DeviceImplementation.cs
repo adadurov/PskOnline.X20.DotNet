@@ -76,6 +76,11 @@
       var response = (CmdGetDeviceDescriptorResponse)
         new CmdGetDeviceDescriptor(_logger).Execute(GetUsbControlPipe());
 
+      if (!response.Succeeded)
+      {
+        throw new Exception("Unable to retrieve USB Device Descriptor");
+      }
+
       response.DeviceDescriptor.Product = GetStringDescriptor(response.DeviceDescriptor.iProduct);
       response.DeviceDescriptor.Manufacturer = GetStringDescriptor(response.DeviceDescriptor.iManufacturer);
       response.DeviceDescriptor.SerialNumber = GetStringDescriptor(response.DeviceDescriptor.iSerialumber);
