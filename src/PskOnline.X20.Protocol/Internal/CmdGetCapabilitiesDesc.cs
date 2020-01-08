@@ -42,7 +42,7 @@
       }
       catch (Exception ex)
       {
-        _logger.LogError("Error retrieving the size of the capabilities descriptor", ex);
+        _logger.LogError(ex, "Error retrieving the size of the capabilities descriptor");
         return 0;
       }
     }

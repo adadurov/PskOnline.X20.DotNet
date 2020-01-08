@@ -71,6 +71,18 @@
       return Encoding.Unicode.GetString(buffer, 2, realLength);
     }
 
+    public USBDeviceDescriptor GetUsbDeviceDescriptor()
+    {
+      var response = (CmdGetDeviceDescriptorResponse)
+        new CmdGetDeviceDescriptor(_logger).Execute(GetUsbControlPipe());
+
+      response.DeviceDescriptor.Product = GetStringDescriptor(response.DeviceDescriptor.iProduct);
+      response.DeviceDescriptor.Manufacturer = GetStringDescriptor(response.DeviceDescriptor.iManufacturer);
+      response.DeviceDescriptor.SerialNumber = GetStringDescriptor(response.DeviceDescriptor.iSerialumber);
+
+      return response.DeviceDescriptor;
+    }
+
     private static void LogDeviceInformation(ILogger logger, Capabilities cap)
     {
       var sb = new StringBuilder("PSK-X20: ", 300);

@@ -22,5 +22,6 @@
 
     PhysioDataPackage GetPhysioData(int timeoutMsec);
 
+    USBDeviceDescriptor GetUsbDeviceDescriptor();
   }
 }

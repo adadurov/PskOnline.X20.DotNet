@@ -30,11 +30,5 @@
         handle.Free();
       }
     }
-
-    private static string StringFromAsciiBytes(byte[] firmwareBuildDate)
-    {
-      return System.Text.Encoding.ASCII.GetString(firmwareBuildDate);
-    }
   }
-
 }

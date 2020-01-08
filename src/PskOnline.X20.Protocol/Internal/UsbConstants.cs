@@ -3,7 +3,7 @@
   using System;
 
   [Flags]
-  public enum UsbConstants
+  public enum UsbConstants : byte
   {
     UsbSetupDataStageIn = 0x80,
 

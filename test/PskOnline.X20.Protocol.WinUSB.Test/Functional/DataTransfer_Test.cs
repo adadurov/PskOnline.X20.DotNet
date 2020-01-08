@@ -62,10 +62,10 @@
     public void DataTransfer_Ramp_60s()
     {
       _device.UseRamp();
-      var packages = RetrieveDataForPeriod(TimeSpan.FromSeconds(60));
+      var results = DataTransferTestHelper.RetrieveDataForPeriod(_device, TimeSpan.FromSeconds(60), _logger);
       int? lastSample = null;
 
-      foreach (var package in packages)
+      foreach (var package in results.Packages)
       {
         _logger.LogInformation($"=====>");
         foreach (var sample in package.Samples)
@@ -74,9 +74,9 @@
         }
       }
 
-      for (var pi = 0; pi < packages.Count; ++pi)
+      for (var pi = 0; pi < results.Packages.Count; ++pi)
       {
-        var package = packages[pi];
+        var package = results.Packages[pi];
         for (var si = 0; si < package.Samples.Length; ++si)
         {
           var sample = package.Samples[si];

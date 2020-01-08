@@ -1,6 +1,5 @@
 ﻿namespace PskOnline.X20.Protocol.WinUSB
 {
-  using MadWizard.WinUSBNet;
   using Microsoft.Extensions.Logging;
   using PskOnline.X20.Protocol.Internal;
   using System;
@@ -8,16 +7,16 @@
   public sealed class X20Device : IX20Device
   {
     private readonly X20DeviceImplementation _deviceImpl;
-    private readonly USBDevice _winUsbDevice;
+    private readonly MadWizard.WinUSBNet.USBDevice _winUsbDevice;
     private readonly ILogger _logger;
 
-    public X20Device(USBDeviceInfo winUsbDevice, ILoggerFactory loggerFactory)
+    public X20Device(MadWizard.WinUSBNet.USBDeviceInfo winUsbDevice, ILoggerFactory loggerFactory)
     {
       if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
       _logger = loggerFactory.CreateLogger(nameof(X20Device));
 
       if (winUsbDevice == null) throw new ArgumentNullException(nameof(winUsbDevice));
-      _winUsbDevice = new USBDevice(winUsbDevice);
+      _winUsbDevice = new MadWizard.WinUSBNet.USBDevice(winUsbDevice);
 
       _deviceImpl = new X20DeviceImplementation(
         _logger, GetDataPipe(), GetUsbControlPipe(), _winUsbDevice.Descriptor.SerialNumber);
@@ -77,6 +76,11 @@
         return buffer.UsbDataPackageFromByteArray();
       }
       return null;
+    }
+
+    public USBDeviceDescriptor GetUsbDeviceDescriptor()
+    {
+      return _deviceImpl.GetUsbDeviceDescriptor();
     }
 
   }

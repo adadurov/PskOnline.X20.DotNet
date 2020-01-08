@@ -35,6 +35,22 @@
 
     [Test]
     [Explicit]
+    public void GetUsbDeviceDescriptor_Smoke()
+    {
+      var response = _device.GetUsbDeviceDescriptor();
+
+      response.ShouldNotBeNull();
+      response.Manufacturer.ShouldNotBeNullOrEmpty();
+      response.SerialNumber.ShouldNotBeNullOrEmpty();
+      response.Product.ShouldNotBeNullOrEmpty();
+
+      _logger.LogInformation("Manufacturer: " + response.Manufacturer);
+      _logger.LogInformation("Product:      " + response.Product);
+      _logger.LogInformation("SerialNumber: " + response.SerialNumber);
+    }
+
+    [Test]
+    [Explicit]
     public void GetCapabilities_Smoke()
     {
       var response = _device.GetCapabilities();
