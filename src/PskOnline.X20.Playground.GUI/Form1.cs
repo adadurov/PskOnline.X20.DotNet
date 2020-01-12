@@ -67,6 +67,17 @@
 
     private void Form1_Load(object sender, EventArgs e)
     {
+      InitPlotterAxes();
+
+      _analysisQueue = new ConcurrentQueue<PhysioDataPackage>();
+
+      _thread = new Thread(DataRetrievingThread);
+      _thread.Start();
+      timer1.Start();
+    }
+
+    private void InitPlotterAxes()
+    {
       var plotModel = new OxyPlot.PlotModel
       {
         PlotType = OxyPlot.PlotType.XY,
@@ -116,12 +127,6 @@
       plotModel.Series.Add(_unfilteredSeries);
       plotModel.Series.Add(_filteredSeries);
       plotView1.Model = plotModel;
-
-      _analysisQueue = new ConcurrentQueue<PhysioDataPackage>();
-
-      _thread = new Thread(DataRetrievingThread);
-      _thread.Start();
-      timer1.Start();
     }
 
     private void UpdatePlotData()
