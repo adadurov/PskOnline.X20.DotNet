@@ -134,8 +134,8 @@
       // depends on the size of the buffer in the firmware
       Thread.Sleep(5000);
 
-      var package1 = _device.GetPhysioData();
-      var package2 = _device.GetPhysioData();
+      var package1 = _device.GetPhysioData(200);
+      var package2 = _device.GetPhysioData(200);
 
       // checkpoint...
       package1.ShouldNotBeNull();

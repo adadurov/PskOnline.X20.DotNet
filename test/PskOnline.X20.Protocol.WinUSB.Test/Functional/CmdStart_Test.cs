@@ -34,26 +34,5 @@
       response.Succeeded.ShouldBe(true);
     }
 
-    [Test]
-    [Explicit]
-    public void Start_Long()
-    {
-      int count = 0;
-
-      try
-      {
-        while (count < 1000)
-        {
-          count++;
-          var response = _device.StartMeasurement();
-          response.ShouldBe(true);
-        }
-      }
-      finally
-      {
-        _logger.LogInformation($"START executed {count} times.");
-      }
-    }
-
   }
 }

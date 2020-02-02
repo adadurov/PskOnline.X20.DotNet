@@ -52,6 +52,23 @@
       return RetrieveDataForPeriod(device, timeLimit, logger);
     }
 
+    public static void RunRampTest(IX20Device device, TimeSpan timeLimit, ILogger logger)
+    {
+      // stop possibly continued transfer and skip a package
+      // that might have been queued for transmission before,
+      // but doesn't contain the ramp data
+      device.StopMeasurement();
+      RetrieveDataForPeriod(device, TimeSpan.FromMilliseconds(500), logger);
+
+      device.UseRamp();
+
+      var rampData = RetrieveDataForPeriod(device, timeLimit, logger);
+
+      var samplingRate = device.GetCapabilities().SamplingRate;
+
+      ValidateRampData(samplingRate, logger, rampData);
+    }
+
     public static DataTransferResult RetrieveDataForPeriod(IX20Device device, TimeSpan timeLimit, ILogger logger)
     {
       var SamplingRate = device.GetCapabilities().SamplingRate;
@@ -66,7 +83,7 @@
       // Retrieve data during timeLimit
       while (ElapsedFrom(startTime) < timeLimit)
       {
-        var package = device.GetPhysioData(200);
+        var package = device.GetPhysioData(500);
         if (package != null)
         {
           dataPackages.Add(package);
@@ -89,23 +106,11 @@
       };
     }
 
-    public static void RunRampTest(IX20Device device, TimeSpan timeLimit, ILogger logger)
+    private static void ValidateRampData(int SamplingRate, ILogger logger, DataTransferResult result)
     {
-      // stop possibly continued transfer and skip a package 
-      // that might have been queued for transmission before,
-      // but doesn't contain the ramp data
-      device.StopMeasurement();
-      RetrieveDataForPeriod(device, TimeSpan.FromMilliseconds(500), logger);
-
-      device.UseRamp();
-      
-      var result = RetrieveDataForPeriod(device, timeLimit, logger);
-      
       var totalSamples = result.Packages.Sum(p => p.Samples.Length);
 
       logger.LogInformation($"Retrieved {totalSamples}");
-
-      var SamplingRate = device.GetCapabilities().SamplingRate;
 
       int? lastSample = null;
 
@@ -138,8 +143,6 @@
         }
       }
     }
-
-
 
     private static TimeSpan ElapsedFrom(DateTime startTime)
     {

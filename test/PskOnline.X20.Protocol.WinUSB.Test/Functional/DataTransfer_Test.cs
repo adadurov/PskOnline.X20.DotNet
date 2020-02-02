@@ -59,40 +59,6 @@
 
     [Test]
     [Explicit]
-    public void DataTransfer_Ramp_60s()
-    {
-      _device.UseRamp();
-      var results = DataTransferTestHelper.RetrieveDataForPeriod(_device, TimeSpan.FromSeconds(60), _logger);
-      int? lastSample = null;
-
-      foreach (var package in results.Packages)
-      {
-        _logger.LogInformation($"=====>");
-        foreach (var sample in package.Samples)
-        {
-          _logger.LogInformation(sample.ToString());
-        }
-      }
-
-      for (var pi = 0; pi < results.Packages.Count; ++pi)
-      {
-        var package = results.Packages[pi];
-        for (var si = 0; si < package.Samples.Length; ++si)
-        {
-          var sample = package.Samples[si];
-          if (lastSample.HasValue)
-          {
-            Assert.That(sample, Is.EqualTo(lastSample.Value + 1),
-              $"Package #{pi}, sample #{si} doesn't match the expected ramp value of {lastSample.Value}");
-          }
-          lastSample = sample;
-        }
-      }
-
-    }
-
-    [Test]
-    [Explicit]
     public void DataTransfer_SamplingRate_10s()
     {
       var result = DataTransferTestHelper.RetrievePpgDataForPeriod(_device, TimeSpan.FromSeconds(10), _logger);
@@ -116,38 +82,6 @@
 
       DataTransferTestHelper.RunRampTest(_device, time, _logger);
     }
-
-    [Test]
-    [Explicit]
-    public void DataTransfer_SamplingRate_Repeat_2x5s()
-    {
-      {
-        var result = DataTransferTestHelper.RetrievePpgDataForPeriod(_device, TimeSpan.FromSeconds(5), _logger);
-        var totalSamples = result.Packages.Sum(p => p.Samples.Length);
-
-        // Checkpoint 3
-        Assert.That(
-          totalSamples,
-          Is.EqualTo(SamplingRate * result.ActualRuntime.TotalSeconds)
-          .Within(6)
-          .Percent
-          );
-      }
-      System.Threading.Thread.Sleep(500);
-
-      {
-        var result = DataTransferTestHelper.RetrievePpgDataForPeriod(_device, TimeSpan.FromSeconds(5), _logger);
-        var totalSamples = result.Packages.Sum(p => p.Samples.Length);
-
-        // Checkpoint 3
-        Assert.That(
-          totalSamples,
-          Is.EqualTo(SamplingRate * result.ActualRuntime.TotalSeconds)
-          .Within(6)
-          .Percent
-          );
-      }
-    }
-
+    
   }
 }

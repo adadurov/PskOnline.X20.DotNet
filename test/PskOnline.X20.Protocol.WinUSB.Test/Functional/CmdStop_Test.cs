@@ -34,21 +34,5 @@
       response.Succeeded.ShouldBe(true);
     }
 
-    [Test]
-    [Explicit]
-    public void Stop_Long()
-    {
-      int count = 0;
-
-      while (count < 1000)
-      {
-        count++;
-        var response = new CmdStop(_logger).Execute(_device.GetUsbControlPipe());
-        response.Succeeded.ShouldBe(true);
-
-        _logger.LogInformation($"STOP executed {count} times.");
-      }
-    }
-
   }
 }

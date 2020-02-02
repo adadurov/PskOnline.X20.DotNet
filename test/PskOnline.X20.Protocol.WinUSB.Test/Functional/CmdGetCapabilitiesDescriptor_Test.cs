@@ -78,22 +78,5 @@
       ((int)response.CapabilitiesDescriptor.samplingRate).ShouldBe(400);
     }
 
-    [Test]
-    [Explicit]
-    public void GetCapabilitiesDescriptor_Long()
-    {
-      int count = 0;
-
-      while (count < 1000)
-      {
-        count++;
-        var response = (CmdGetCapabilitiesDescriptorResponse)
-        new CmdGetCapabilitiesDescriptor(_logger).Execute(_device.GetUsbControlPipe());
-        response.Succeeded.ShouldBe(true);
-
-        _logger.LogInformation($"GET_CAPABILITIES_DESCRIPTOR executed {count} times.");
-      }
-    }
-
   }
 }
