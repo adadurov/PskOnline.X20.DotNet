@@ -42,6 +42,10 @@
         _logger.LogInformation($"Packages: {result.Packages.Count}");
         _logger.LogInformation($"Samples:  {samplesCount}");
 
+        var actualSamplingRate = samplesCount / result.ActualRuntime.TotalSeconds;
+
+        actualSamplingRate.ShouldBe(400, 400 * 0.01);
+
         // Checkpoints
         return result;
       }

@@ -99,6 +99,25 @@
       var totalSamples = dataPackages.Sum(p => p.Samples.Length);
       logger.LogInformation($"Retrieved {totalSamples}");
 
+      // no overflows allowed
+      foreach(var package in dataPackages)
+      {
+        package.RingBufferOverflows.ShouldBe(0);
+      }
+
+      // no missing packages allowed
+      int? number = null;
+      foreach (var package in dataPackages)
+      {
+        package.RingBufferOverflows.ShouldBe(0);
+        if (number.HasValue)
+        {
+          var curPackNum = ((int)package.PackageNumber);
+          curPackNum.ShouldBe(number.Value + 1);
+          number = curPackNum;
+        }
+      }
+
       return new DataTransferResult
       {
         Packages = dataPackages,
