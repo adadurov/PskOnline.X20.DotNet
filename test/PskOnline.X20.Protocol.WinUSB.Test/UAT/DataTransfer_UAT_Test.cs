@@ -53,22 +53,9 @@
 
     [Test]
     [Explicit]
-    public void DataTransfer_Repeat_10x6min()
+    public void DataTransfer_Repeat_20x4min()
     {
-      for (var i = 0; i < 10; ++i)
-      {
-        RetrieveDataForPeriod(
-          TimeSpan.FromMinutes(6),
-          nameof(DataTransfer_Repeat_10x6min));
-        System.Threading.Thread.Sleep(2000);
-      }
-    }
-
-    [Test]
-    [Explicit]
-    public void DataTransfer_Repeat_40x4min()
-    {
-      for (var i = 0; i < 40; ++i)
+      for (var i = 0; i < 20; ++i)
       {
         RetrieveDataForPeriod(
           TimeSpan.FromSeconds(3 * 60 + 55), 
@@ -107,30 +94,5 @@
         }
       }
     }
-
-
-    [Test]
-    [Explicit]
-    public void DataTransfer_Ramp_30x10sec()
-    {
-      var timeLimit = TimeSpan.FromSeconds(10);
-
-      var fac = SerilogHelper.GetLoggerFactory();
-
-      using (var device = DeviceHelper.GetFirstSuitableDevice(fac))
-      {
-        for (var i = 0; i < 30; ++i)
-        {
-          _logger.LogInformation($"Started iteration {i}");
-          DataTransferTestHelper.RunRampTest(device, timeLimit, _logger);
-          System.Threading.Thread.Sleep(2000);
-
-          //DataTransferTestHelper.RetrievePpgDataForPeriod(device, TimeSpan.FromSeconds(1), _logger);
-          //_logger.LogInformation($"Completed iteration {i}");
-          //System.Threading.Thread.Sleep(200);
-        }
-      }
-    }
-
   }
 }
