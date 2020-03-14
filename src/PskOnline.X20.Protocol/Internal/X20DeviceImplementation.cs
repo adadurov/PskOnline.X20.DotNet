@@ -65,7 +65,8 @@
 
       var buffer = _usbControlPipe.ControlTransferIn(packet.bmRequestType, packet.bRequest, packet.wValue, packet.wIndex, packet.wLength);
 
-      // this is required due to an issue in WinUSB.NET
+      // this is required due to an issue in WinUSB.NET 1.0.3;
+      // should be fixed in WinUSB.NET 2.0.0
       var realLength = Math.Max(Math.Min(buffer[0], buffer.Length) - 2, 0);
 
       return Encoding.Unicode.GetString(buffer, 2, realLength);
