@@ -15,11 +15,13 @@
     <dependencies>
       <group targetFramework=".NETFramework4.7.2">
         <dependency id="WinUSBNet" version="1.0.3" exclude="Build,Analyzers" />
+        <dependency id="MathNet.Filtering" version="0.6.0" exclude="Build,Analyzers" />
       </group>
     </dependencies>
   </metadata>
   <files>
     <file src=".\src\PskOnline.X20.Protocol.WinUSB\bin\Release\PskOnline.X20.Protocol.WinUSB.dll" target="lib\net472\PskOnline.X20.Protocol.WinUSB.dll" />
     <file src=".\src\PskOnline.X20.Protocol.WinUSB\bin\Release\PskOnline.X20.Protocol.dll" target="lib\net472\PskOnline.X20.Protocol.dll" />
+    <file src=".\src\PskOnline.X20.Filter\bin\Release\netstandard2.0\PskOnline.X20.Filter.dll" target="lib\net472\PskOnline.X20.Filter.dll" />
   </files>
 </package>

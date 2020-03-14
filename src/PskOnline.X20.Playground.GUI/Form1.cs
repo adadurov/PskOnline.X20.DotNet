@@ -29,7 +29,7 @@
 
     StdDevStabilizer _signalNormalizer;
 
-    LowPassFilter _lpFilter;
+    PskOnline.X20.Filter.LowPassFilter _lpFilter;
 
     IX20Device _device;
     FileWriter _fileWriter;
@@ -51,7 +51,7 @@
         SamplingRate,
         new StdDevStabilizerParams { MinGain = 200, MaxGain = 13000, DSN = 3337 });
 
-      _lpFilter = new LowPassFilter();
+      _lpFilter = new PskOnline.X20.Filter.LowPassFilter();
       InitializeComponent();
 
       ClearDeviceDetails();
