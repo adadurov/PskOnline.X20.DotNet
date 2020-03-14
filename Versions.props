@@ -3,7 +3,7 @@
 
     <!-- Update these values according to SemVer -->
     <VersionMajor>0</VersionMajor>
-    <VersionMinor>16</VersionMinor>
+    <VersionMinor>17</VersionMinor>
     <VersionPatch>0</VersionPatch>
 
     <!-- Change this to set the phase of the project. Use values like "alpha", "beta", "rc1", "rtm", etc. -->
